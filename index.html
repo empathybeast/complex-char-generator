@@ -496,114 +496,105 @@
     async function renderCard(c) {
       if (document.fonts) {
         await Promise.all([
-          document.fonts.load('600 52px "EB Garamond"'),
+          document.fonts.load('600 44px "EB Garamond"'),
+          document.fonts.load('500 24px "EB Garamond"'),
           document.fonts.load('italic 400 22px "EB Garamond"'),
-          document.fonts.load('500 13px "Cinzel"'),
+          document.fonts.load('500 12px "Cinzel"'),
         ]).catch(() => {});
       }
-      const W = 1600, H = 900, M = 72;
+      const W = 1600, H = 900;
       const canvas = document.createElement("canvas"); canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext("2d");
+      const LINE = "rgba(171,220,244,0.22)";
       ctx.fillStyle = NAVY; ctx.fillRect(0, 0, W, H);
-      const glow = ctx.createRadialGradient(W / 2, 70, 10, W / 2, 160, 720);
-      glow.addColorStop(0, "rgba(155,214,242,0.18)"); glow.addColorStop(1, "rgba(155,214,242,0)");
+      const glow = ctx.createRadialGradient(420, 180, 20, 700, 240, 780);
+      glow.addColorStop(0, "rgba(155,214,242,0.14)"); glow.addColorStop(1, "rgba(155,214,242,0)");
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = INK; ctx.fillRect(32, 32, W - 64, H - 64);
-      ctx.strokeStyle = ICE; ctx.globalAlpha = 0.92; ctx.lineWidth = 1.6; ctx.strokeRect(32, 32, W - 64, H - 64);
-      ctx.globalAlpha = 0.58; ctx.lineWidth = 1.1; ctx.strokeRect(42, 42, W - 84, H - 84);
-      ctx.globalAlpha = 0.28; ctx.lineWidth = 1; ctx.strokeRect(54, 54, W - 108, H - 108); ctx.globalAlpha = 1;
-      flourish(ctx, 48, 48, 1, 1); flourish(ctx, W - 48, 48, -1, 1);
-      flourish(ctx, 48, H - 48, 1, -1); flourish(ctx, W - 48, H - 48, -1, -1);
-      const label = (text, x, y) => {
-        ctx.fillStyle = MUTED; ctx.font = '500 11px "Cinzel", serif'; ctx.letterSpacing = "0.2em";
-        ctx.textAlign = "center"; ctx.fillText(String(text).toUpperCase(), x, y); ctx.letterSpacing = "0px";
+      ctx.fillStyle = INK; ctx.fillRect(28, 28, W - 56, H - 56);
+      ctx.strokeStyle = ICE; ctx.globalAlpha = 0.9; ctx.lineWidth = 1.5; ctx.strokeRect(28, 28, W - 56, H - 56);
+      ctx.globalAlpha = 0.45; ctx.lineWidth = 1; ctx.strokeRect(38, 38, W - 76, H - 76); ctx.globalAlpha = 1;
+      flourish(ctx, 44, 44, 1, 1); flourish(ctx, W - 44, 44, -1, 1);
+      flourish(ctx, 44, H - 44, 1, -1); flourish(ctx, W - 44, H - 44, -1, -1);
+      const pane = (x, y, w, h) => {
+        ctx.fillStyle = "rgba(171,220,244,0.07)"; roundRect(ctx, x, y, w, h, 12); ctx.fill();
+        ctx.strokeStyle = "rgba(171,220,244,0.55)"; ctx.lineWidth = 1.2; ctx.stroke();
       };
-      const panel = (x, y, w, h, title, value) => {
-        windowBox(ctx, x, y, w, h); label(title, x + w / 2, y + 26);
-        ctx.fillStyle = ICE; ctx.font = '500 22px "EB Garamond", Georgia, serif'; ctx.textAlign = "center";
-        const lines = wrapText(ctx, cap(value), w - 36).slice(0, 2);
-        const start = y + (h - 18 - lines.length * 26) / 2 + 28;
-        lines.forEach((line, i) => ctx.fillText(line, x + w / 2, start + i * 26));
-      };
-      const chips = (items, x, y, maxW) => {
-        let cx = x, cy = y, gap = 8, chipH = 34;
-        ctx.font = '500 16px "EB Garamond", Georgia, serif';
-        for (const raw of items) {
-          const item = cap(raw);
-          const chipW = Math.min(maxW, Math.max(72, ctx.measureText(item).width + 28));
-          if (cx + chipW > x + maxW && cx > x) { cx = x; cy += chipH + gap; }
-          windowBox(ctx, cx, cy, chipW, chipH);
-          ctx.fillStyle = ICE; ctx.textAlign = "center";
-          ctx.font = '500 16px "EB Garamond", Georgia, serif';
-          ctx.fillText(item, cx + chipW / 2, cy + 22);
-          cx += chipW + gap;
-        }
+      const lab = (text, x, y, align) => {
+        ctx.fillStyle = MUTED; ctx.font = '500 11px "Cinzel", serif'; ctx.letterSpacing = "0.18em";
+        ctx.textAlign = align || "left"; ctx.fillText(String(text).toUpperCase(), x, y); ctx.letterSpacing = "0px";
       };
 
-      ctx.fillStyle = MUTED; ctx.font = '500 12px "Cinzel", serif'; ctx.letterSpacing = "0.26em";
-      ctx.textAlign = "left"; ctx.fillText(dossierCode(c.id), M, 88);
-      ctx.textAlign = "right"; ctx.fillText("ПЕРСОНА", W - M, 88); ctx.letterSpacing = "0px";
-      const morph = D.BODY_TYPE_LABELS[c.bodyType];
-      ctx.font = '500 16px "Cinzel", serif';
-      const morphW = Math.max(148, ctx.measureText(morph.toUpperCase()).width + 36);
-      windowBox(ctx, (W - morphW) / 2, 66, morphW, 36);
-      ctx.fillStyle = ICE2; ctx.textAlign = "center"; ctx.letterSpacing = "0.18em";
-      ctx.fillText(morph.toUpperCase(), W / 2, 90); ctx.letterSpacing = "0px";
+      ctx.fillStyle = MUTED; ctx.font = '500 12px "Cinzel", serif'; ctx.letterSpacing = "0.22em";
+      ctx.textAlign = "left"; ctx.fillText(dossierCode(c.id), 64, 78);
+      ctx.textAlign = "right"; ctx.fillText("ПЕРСОНА", W - 64, 78); ctx.letterSpacing = "0px";
 
-      const title = cap(c.species || occupationLine(c) || "Персона");
-      ctx.fillStyle = ICE; ctx.font = '600 50px "EB Garamond", Georgia, serif'; ctx.textAlign = "center";
-      ctx.fillText(title, W / 2, 168);
-      const meta = [c.ageGroup, c.gender, c.country].filter(Boolean).map(cap).join("  ·  ");
-      if (meta) {
-        ctx.fillStyle = MUTED; ctx.font = 'italic 400 22px "EB Garamond", Georgia, serif';
-        ctx.fillText(meta, W / 2, 204);
-      }
-      let y = meta ? 230 : 214;
+      const leftX = 64, leftW = 500, rightX = 596, rightW = 940, top = 104, bottom = 848, paneH = bottom - top;
+      pane(leftX, top, leftW, paneH); pane(rightX, top, rightW, paneH);
+      const lx = leftX + 36, lw = leftW - 72; let y = top + 38;
+      const morph = D.BODY_TYPE_LABELS[c.bodyType].toUpperCase();
+      ctx.font = '500 12px "Cinzel", serif'; ctx.letterSpacing = "0.2em";
+      const morphW = Math.max(128, ctx.measureText(morph).width + 28);
+      ctx.fillStyle = "rgba(155,214,242,0.16)"; roundRect(ctx, lx, y, morphW, 28, 6); ctx.fill();
+      ctx.strokeStyle = ICE2; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = ICE2; ctx.textAlign = "left"; ctx.fillText(morph, lx + 14, y + 19); ctx.letterSpacing = "0px";
+      y += 56;
+      ctx.fillStyle = ICE; ctx.font = '600 44px "EB Garamond", Georgia, serif';
+      wrapText(ctx, cap(c.species || "Персона"), lw).slice(0, 2).forEach((line) => { ctx.fillText(line, lx, y); y += 48; });
+      y += 6;
       if (c.occupationRole && c.occupationTag) {
-        ctx.font = '500 22px "EB Garamond", Georgia, serif';
-        const role = cap(c.occupationRole), tag = cap(c.occupationTag);
-        const roleW = Math.max(140, ctx.measureText(role).width + 44);
-        const tagW = Math.max(140, ctx.measureText(tag).width + 44);
-        let x = (W - (roleW + 34 + tagW)) / 2;
-        windowBox(ctx, x, y, roleW, 42); ctx.fillStyle = ICE; ctx.textAlign = "center"; ctx.fillText(role, x + roleW / 2, y + 28);
-        x += roleW; ctx.fillStyle = MUTED; ctx.fillText("+", x + 17, y + 28); x += 34;
-        windowBox(ctx, x, y, tagW, 42); ctx.fillStyle = ICE; ctx.fillText(tag, x + tagW / 2, y + 28);
-        y += 64;
-      } else y += 18;
-      ctx.strokeStyle = "rgba(171,220,244,0.28)"; ctx.beginPath();
-      ctx.moveTo(M + 90, y); ctx.lineTo(W / 2 - 16, y); ctx.moveTo(W / 2 + 16, y); ctx.lineTo(W - M - 90, y); ctx.stroke();
-      ctx.fillStyle = ICE; diamond(ctx, W / 2, y, 5); y += 28;
-
-      const facts = [];
-      if (c.orientation) facts.push(["Ориентация", c.orientation]);
-      if (c.setting) facts.push(["Сеттинг", c.setting]);
-      if (c.archetype) facts.push(["Архетип", c.archetype]);
-      const plot = c.plotTwist ? cap(c.plotTwist) : "";
-      const plotH = plot ? 108 : 0;
-      const contentBottom = H - 58 - (plot ? plotH + 18 : 0);
-      if (facts.length) {
-        const gap = 16, factW = (W - M * 2 - gap * (facts.length - 1)) / facts.length;
-        facts.forEach((fact, i) => panel(M + i * (factW + gap), y, factW, 96, fact[0], fact[1]));
-        y += 114;
+        ctx.fillStyle = ICE2; ctx.font = 'italic 400 22px "EB Garamond", Georgia, serif';
+        const job = `${cap(c.occupationRole)}  ·  ${cap(c.occupationTag)}`;
+        wrapText(ctx, job, lw).slice(0, 2).forEach((line) => { ctx.fillText(line, lx, y); y += 28; });
       }
+      y += 18;
+      ctx.strokeStyle = LINE; ctx.beginPath(); ctx.moveTo(lx, y); ctx.lineTo(lx + lw, y); ctx.stroke();
+      ctx.fillStyle = ICE; diamond(ctx, lx + lw / 2, y, 4); y += 28;
+      const leftFacts = [["Возраст", c.ageGroup], ["Пол", c.gender], ["Страна", c.country], ["Ориентация", c.orientation]];
+      leftFacts.forEach(([label, value]) => {
+        if (!value) return;
+        ctx.fillStyle = LINE; ctx.fillRect(lx, y + 34, lw, 1);
+        lab(label, lx, y, "left");
+        ctx.fillStyle = ICE; ctx.font = '500 24px "EB Garamond", Georgia, serif'; ctx.textAlign = "left";
+        const lines = wrapText(ctx, cap(value), lw).slice(0, 2);
+        lines.forEach((line, i) => ctx.fillText(line, lx, y + 26 + i * 26));
+        y += 54 + (lines.length - 1) * 26;
+      });
+
+      const rx = rightX + 32, rw = rightW - 64; let ry = top + 32; const gap = 14;
+      const flavor = [["Сеттинг", c.setting], ["Архетип", c.archetype]].filter((x) => x[1]);
+      if (flavor.length) {
+        const boxW = (rw - gap * (flavor.length - 1)) / flavor.length, topBoxH = 118;
+        flavor.forEach((fact, i) => {
+          const bx = rx + i * (boxW + gap);
+          pane(bx, ry, boxW, topBoxH);
+          lab(fact[0], bx + boxW / 2, ry + 28, "center");
+          ctx.fillStyle = ICE; ctx.font = '500 24px "EB Garamond", Georgia, serif'; ctx.textAlign = "center";
+          wrapText(ctx, cap(fact[1]), boxW - 28).slice(0, 2).forEach((line, k) => ctx.fillText(line, bx + boxW / 2, ry + 62 + k * 28));
+        });
+        ry += 134;
+      }
+      const plot = c.plotTwist ? cap(c.plotTwist) : "";
+      const plotH = plot ? 126 : 0;
+      const listsBottom = bottom - 28 - (plot ? plotH + 14 : 0);
       const showMarks = c.marks !== undefined, showTraits = c.traits !== undefined;
-      const panels = [showMarks, showTraits].filter(Boolean).length;
-      if (panels) {
-        const gap = 16, panelW = panels === 2 ? (W - M * 2 - gap) / 2 : W - M * 2;
-        const panelH = Math.max(118, contentBottom - y);
-        const list = (px, title, items) => {
-          windowBox(ctx, px, y, panelW, panelH); label(title, px + panelW / 2, y + 26);
-          chips(items.length ? items : ["Нет"], px + 22, y + 44, panelW - 44);
+      const listCount = Number(showMarks) + Number(showTraits);
+      if (listCount) {
+        const listH = (listsBottom - ry - (listCount === 2 ? 14 : 0)) / listCount;
+        const drawList = (ly, title, items) => {
+          pane(rx, ly, rw, listH); lab(title, rx + 22, ly + 30, "left");
+          ctx.fillStyle = ICE; ctx.font = '500 23px "EB Garamond", Georgia, serif'; ctx.textAlign = "left";
+          const text = items.length ? items.map(cap).join("   ·   ") : "Нет";
+          wrapText(ctx, text, rw - 44).slice(0, 3).forEach((line, i) => ctx.fillText(line, rx + 22, ly + 64 + i * 30));
         };
-        if (showMarks) list(M, "Приметы", c.marks || []);
-        if (showTraits) list(M + (showMarks ? panelW + gap : 0), "Характер", c.traits || []);
+        if (showMarks) { drawList(ry, "Приметы", c.marks || []); ry += listH + 14; }
+        if (showTraits) drawList(ry, "Характер", c.traits || []);
       }
       if (plot) {
-        const boxY = H - 58 - plotH;
-        windowBox(ctx, M, boxY, W - M * 2, plotH);
-        label("Поворот сюжета", W / 2, boxY + 26);
+        const py = bottom - 28 - plotH;
+        pane(rx, py, rw, plotH);
+        lab("Поворот сюжета", rx + rw / 2, py + 30, "center");
         ctx.fillStyle = ICE; ctx.font = 'italic 400 22px "EB Garamond", Georgia, serif'; ctx.textAlign = "center";
-        wrapText(ctx, plot, W - M * 2 - 64).slice(0, 2).forEach((line, i) => ctx.fillText(line, W / 2, boxY + 58 + i * 26));
+        wrapText(ctx, plot, rw - 48).slice(0, 3).forEach((line, i) => ctx.fillText(line, rx + rw / 2, py + 64 + i * 26));
       }
       return await new Promise((resolve, reject) => canvas.toBlob((b) => b ? resolve(b) : reject(new Error("jpg")), "image/jpeg", 0.93));
     }
