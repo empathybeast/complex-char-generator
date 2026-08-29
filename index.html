@@ -374,7 +374,13 @@
         case "species": return pick(D.speciesByBody[ctx.body]);
         case "ageGroup": return pick(D.ageGroupsByBody[ctx.body]);
         case "setting": return pick(D.settingsByBody[ctx.body]);
-        case "occupation": return { role: pick(D.occupationRolesByBody[ctx.body]), tag: pick(D.occupationTagsByBody[ctx.body]) };
+        case "occupation": {
+          const roles = D.occupationRolesByBody[ctx.body];
+          const tags = D.occupationTagsByBody[ctx.body];
+          const role = pick(roles);
+          const other = tags.filter((tag) => tag !== role);
+          return { role, tag: pick(other.length ? other : tags) };
+        }
         case "archetype": return pick(D.archetypesByBody[ctx.body]);
         case "marks": return pickUnique(D.marksByBody[ctx.body], pickCount([{ n: 3, weight: 15 }, { n: 2, weight: 30 }, { n: 1, weight: 50 }, { n: 0, weight: 5 }]));
         case "traits": return pickUnique(D.traits, pickCount([{ n: 2, weight: 40 }, { n: 1, weight: 60 }]));
@@ -390,13 +396,26 @@
       if (field === "setting") return has(D.settingsByBody[body]);
       if (field === "archetype") return has(D.archetypesByBody[body]);
       if (field === "orientation") return has(orientationPool(body));
+      if (field === "occupation") {
+        if (!value || typeof value.role !== "string" || typeof value.tag !== "string") return false;
+        const hasRole = D.occupationRolesByBody[body].some((x) => x.toLowerCase() === value.role.toLowerCase());
+        const hasTag = D.occupationTagsByBody[body].some((x) => x.toLowerCase() === value.tag.toLowerCase());
+        return hasRole && hasTag;
+      }
+      if (field === "marks") {
+        return Array.isArray(value) && value.every((item) =>
+          typeof item === "string" && D.marksByBody[body].some((x) => x.toLowerCase() === item.toLowerCase())
+        );
+      }
       return true;
     }
     function keepLocked(field, state, prev, body) {
       if (!state[field].enabled || !state[field].locked || !prev) return undefined;
       if (field === "occupation") {
         if (!prev.occupationRole || !prev.occupationTag) return undefined;
-        return { role: prev.occupationRole, tag: prev.occupationTag };
+        const occ = { role: prev.occupationRole, tag: prev.occupationTag };
+        if (!isValid(field, occ, body)) return undefined;
+        return occ;
       }
       const cur = prev[field];
       if (!isValid(field, cur, body)) return undefined;
@@ -431,7 +450,7 @@
       for (const field of FIELD_IDS) {
         let val = field === "occupation" ? occupationLine(c) : c[field];
         if (val == null) continue;
-        if (Array.isArray(val)) val = val.map(cap).join(", ");
+        if (Array.isArray(val)) val = val.length ? val.map(cap).join(", ") : "Нет";
         else val = cap(String(val));
         lines.push(`${D.FIELD_LABELS[field]}: ${val}`);
       }
@@ -521,7 +540,7 @@
         if (field === "name" || field === "occupation") continue;
         let text = field === "occupation" ? occupationLine(c) : c[field];
         if (text == null) continue;
-        if (Array.isArray(text)) text = text.join(" · ");
+        if (Array.isArray(text)) text = text.length ? text.join(" · ") : "Нет";
         entries.push({ label: D.FIELD_LABELS[field], text: String(text) });
       }
       const cols = 3, colW = (W - M * 2) / cols, colH = Math.max(78, Math.floor((H - 70 - y) / Math.ceil(entries.length / cols || 1)));
@@ -627,7 +646,9 @@
       }
       const val = c[id];
       if (val == null) return "";
-      if (Array.isArray(val)) return `<div class="chips">${val.map((v) => `<span class="chip window on">${cap(v)}</span>`).join("")}</div>`;
+      if (Array.isArray(val)) return val.length
+        ? `<div class="chips">${val.map((v) => `<span class="chip window on">${cap(v)}</span>`).join("")}</div>`
+        : `<p class="chip window on" style="color:var(--subtle)">Нет</p>`;
       return `<p class="chip window on">${cap(val)}</p>`;
     }
     function renderDossier() {
@@ -641,9 +662,7 @@
       const visible = FIELD_IDS.filter((id) => {
         if (!state[id].enabled) return false;
         if (id === "occupation") return Boolean(character.occupationRole && character.occupationTag);
-        const value = character[id];
-        if (Array.isArray(value) && value.length === 0) return false;
-        return value !== undefined;
+        return character[id] !== undefined;
       });
       dyn.innerHTML = `
         <div class="dossier-head">
@@ -659,7 +678,7 @@
             <div class="label">${D.FIELD_LABELS[id]}</div>
             ${fieldBody(id, character)}
             <div class="actions">
-              <button class="btn btn-ghost" data-reroll="${id}" aria-label="Перебросить">⟳</button>
+              <button class="btn btn-ghost" data-reroll="${id}" aria-label="Перебросить" ${state[id].locked ? "disabled" : ""}>⟳</button>
               <button class="btn btn-ghost" data-lock="${id}" aria-label="Зафиксировать">${state[id].locked ? "🔒" : "🔓"}</button>
             </div>
           </div>
@@ -731,7 +750,7 @@
       }
       if (t.dataset.reroll && character) {
         const id = t.dataset.reroll;
-        if (!state[id].enabled) return;
+        if (!state[id].enabled || state[id].locked) return;
         const ctx = { body: character.bodyType, country: character.country, gender: character.gender, species: character.species, setting: character.setting };
         const value = generateField(id, ctx);
         if (id === "occupation") character = { ...character, occupationRole: value.role, occupationTag: value.tag };
