@@ -512,125 +512,106 @@
     async function renderCard(c) {
       if (document.fonts) {
         await Promise.all([
-          document.fonts.load('700 54px "EB Garamond"'),
+          document.fonts.load('700 42px "EB Garamond"'),
           document.fonts.load('600 28px "EB Garamond"'),
-          document.fonts.load('italic 500 20px "EB Garamond"'),
           document.fonts.load('600 12px "Cinzel"'),
         ]).catch(() => {});
       }
-      const W = 1600, H = 1010, GOLD = "#E8D5A3";
+      const W = 1600, H = 1000;
       const canvas = document.createElement("canvas"); canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext("2d");
+      const LINE = "rgba(171,220,244,0.45)";
       const rr = (x,y,w,h,r) => { roundRect(ctx,x,y,w,h,r); };
       const fillR = (x,y,w,h,r,fill) => { ctx.fillStyle = fill; rr(x,y,w,h,r); ctx.fill(); };
-      const strokeR = (x,y,w,h,r) => { rr(x,y,w,h,r); ctx.stroke(); };
-      const lab = (t,x,y) => {
-        ctx.fillStyle = GOLD; ctx.font = '600 10px "Cinzel", serif'; ctx.letterSpacing = "0.16em";
-        ctx.textAlign = "left"; ctx.fillText(String(t).toUpperCase(), x, y); ctx.letterSpacing = "0px";
+      const numbered = (n, label, value, x, y, w, maxLines) => {
+        ctx.fillStyle = ICE2; ctx.font = '500 13px "Cinzel", serif'; ctx.textAlign = "left"; ctx.letterSpacing = "0.08em";
+        ctx.fillText(n + ". " + label, x, y); ctx.letterSpacing = "0px";
+        ctx.fillStyle = ICE; ctx.font = '600 28px "EB Garamond", Georgia, serif';
+        const lines = wrapText(ctx, cap(value), w).slice(0, maxLines || 1);
+        lines.forEach((line, i) => ctx.fillText(line, x, y + 30 + i * 30));
+        const bottom = y + 36 + lines.length * 30;
+        ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, bottom); ctx.lineTo(x + w, bottom); ctx.stroke();
+        return bottom + 16;
       };
-      const val = (t,x,y,maxW,size) => {
-        ctx.fillStyle = ICE; ctx.font = `600 ${size||22}px "EB Garamond", Georgia, serif`; ctx.textAlign = "left";
-        wrapText(ctx, cap(t), maxW).slice(0,2).forEach((line,i) => ctx.fillText(line, x, y + i * ((size||22)+4)));
-      };
-      const cell = (label, value, x, y, w) => {
-        if (!value) return;
-        lab(label, x, y);
-        ctx.fillStyle = "rgba(171,220,244,0.08)"; rr(x, y+6, w, 36, 4); ctx.fill();
-        val(value, x+8, y+31, w-16, 18);
+      const stat = (label, value, x, y, w) => {
+        ctx.strokeStyle = "rgba(171,220,244,0.22)"; ctx.beginPath(); ctx.moveTo(x, y+28); ctx.lineTo(x+w, y+28); ctx.stroke();
+        ctx.fillStyle = ICE2; ctx.font = '500 14px "Cinzel", serif'; ctx.textAlign = "left"; ctx.fillText(label, x, y+20);
+        ctx.fillStyle = ICE; ctx.font = '600 20px "EB Garamond", Georgia, serif'; ctx.textAlign = "right";
+        ctx.fillText(cap(value), x+w, y+20); ctx.textAlign = "left";
       };
 
       ctx.fillStyle = "#06101c"; ctx.fillRect(0,0,W,H);
-      fillR(22,22,W-44,H-44,28, NAVY);
-      ctx.strokeStyle = ICE; ctx.lineWidth = 2; ctx.globalAlpha = 0.85; strokeR(22,22,W-44,H-44,28);
-      ctx.globalAlpha = 0.4; ctx.lineWidth = 1; strokeR(34,34,W-68,H-68,22); ctx.globalAlpha = 1;
-      ctx.save(); roundRect(ctx,22,22,W-44,H-44,28); ctx.clip();
+      fillR(18,18,W-36,H-36,26, NAVY);
+      ctx.strokeStyle = ICE; ctx.lineWidth = 2; ctx.globalAlpha = 0.85; rr(18,18,W-36,H-36,26); ctx.stroke();
+      ctx.globalAlpha = 0.35; ctx.lineWidth = 1; rr(30,30,W-60,H-60,20); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.save(); rr(18,18,W-36,H-36,26); ctx.clip();
 
-      const head = ctx.createLinearGradient(0,22,0,118);
-      head.addColorStop(0,"#0b2748"); head.addColorStop(1,"#07162c");
-      ctx.fillStyle = head; ctx.fillRect(22,22,W-44,96);
-      ctx.fillStyle = GOLD; ctx.globalAlpha = 0.9; ctx.fillRect(22,115,W-44,3); ctx.globalAlpha = 1;
-      ctx.fillStyle = GOLD; ctx.font = '600 13px "Cinzel", serif'; ctx.letterSpacing = "0.28em"; ctx.textAlign = "left";
-      ctx.fillText("DEPARTMENT OF FICTIONAL IDENTITIES", 56, 54);
-      ctx.fillStyle = ICE; ctx.font = '600 28px "Cinzel", serif'; ctx.letterSpacing = "0.18em";
-      ctx.fillText("IDENTIFICATION CARD", 56, 92); ctx.letterSpacing = "0px";
-      ctx.textAlign = "right"; ctx.fillStyle = GOLD; ctx.font = '600 12px "Cinzel", serif'; ctx.letterSpacing = "0.2em";
-      ctx.fillText("PERSONA", W-56, 54);
-      ctx.fillStyle = ICE; ctx.font = '600 20px "Cinzel", serif'; ctx.letterSpacing = "0.12em";
-      ctx.fillText(dossierCode(c.id), W-56, 90); ctx.letterSpacing = "0px"; ctx.textAlign = "left";
-      ctx.font = '500 8px "Cinzel", serif'; ctx.fillStyle = "rgba(171,220,244,0.28)";
-      ctx.fillText("PERSONA · ID · PERSONA · ".repeat(24), 48, 136);
+      ctx.fillStyle = "#071627"; ctx.fillRect(18,18,W-36,108);
+      ctx.fillStyle = ICE; ctx.globalAlpha = 0.85; ctx.fillRect(18,122,W-36,3); ctx.fillRect(18,128,W-36,1); ctx.globalAlpha = 1;
+      ctx.fillStyle = ICE2; ctx.font = '600 14px "Cinzel", serif'; ctx.letterSpacing = "0.28em"; ctx.textAlign = "left";
+      ctx.fillText("PERSONA", 52, 58);
+      ctx.fillStyle = ICE; ctx.font = '600 26px "Cinzel", serif'; ctx.letterSpacing = "0.16em";
+      ctx.fillText("УДОСТОВЕРЕНИЕ", 52, 96); ctx.letterSpacing = "0px";
+      ctx.textAlign = "right"; ctx.fillStyle = ICE2; ctx.font = '600 12px "Cinzel", serif'; ctx.letterSpacing = "0.16em";
+      ctx.fillText(D.BODY_TYPE_LABELS[c.bodyType].toUpperCase(), W-52, 58);
+      ctx.fillStyle = ICE; ctx.font = '600 22px "Cinzel", serif'; ctx.letterSpacing = "0.1em";
+      ctx.fillText(dossierCode(c.id), W-52, 96); ctx.letterSpacing = "0px"; ctx.textAlign = "left";
 
-      const px = 56, py = 156, pw = 340, ph = 430;
-      fillR(px, py, pw, ph, 10, INK);
-      ctx.strokeStyle = GOLD; ctx.lineWidth = 1.4; strokeR(px, py, pw, ph, 10);
-      ctx.strokeStyle = ICE; ctx.globalAlpha = 0.45; ctx.lineWidth = 1; strokeR(px+10, py+10, pw-20, ph-20, 6); ctx.globalAlpha = 1;
-      const glow = ctx.createRadialGradient(px+pw/2, py+150, 10, px+pw/2, py+180, 220);
-      glow.addColorStop(0,"rgba(155,214,242,0.22)"); glow.addColorStop(1,"rgba(155,214,242,0)");
+      const px = 52, py = 156, pw = 392, ph = 448;
+      fillR(px, py, pw, ph, 6, INK);
+      ctx.strokeStyle = ICE; ctx.lineWidth = 3; rr(px, py, pw, ph, 6); ctx.stroke();
+      ctx.lineWidth = 1; ctx.globalAlpha = 0.4; rr(px+10, py+10, pw-20, ph-20, 3); ctx.stroke(); ctx.globalAlpha = 1;
+      const glow = ctx.createRadialGradient(px+pw/2, py+170, 20, px+pw/2, py+190, 240);
+      glow.addColorStop(0,"rgba(155,214,242,0.2)"); glow.addColorStop(1,"rgba(155,214,242,0)");
       ctx.fillStyle = glow; ctx.fillRect(px, py, pw, ph);
       const species = cap(c.species || "Персона");
-      ctx.fillStyle = ICE; ctx.font = '700 168px "EB Garamond", Georgia, serif'; ctx.textAlign = "center";
-      ctx.fillText(species.charAt(0).toUpperCase(), px+pw/2, py+230);
-      ctx.fillStyle = GOLD; ctx.font = '600 14px "Cinzel", serif'; ctx.letterSpacing = "0.22em";
-      ctx.fillText(D.BODY_TYPE_LABELS[c.bodyType].toUpperCase(), px+pw/2, py+300); ctx.letterSpacing = "0px";
-      ctx.fillStyle = MUTED; ctx.font = '500 13px "Cinzel", serif';
-      ctx.fillText("NO PHOTO ON FILE", px+pw/2, py+388); ctx.textAlign = "left";
+      ctx.fillStyle = ICE; ctx.font = '700 180px "EB Garamond", Georgia, serif'; ctx.textAlign = "center";
+      ctx.fillText(species.charAt(0).toUpperCase(), px+pw/2, py+250);
+      ctx.fillStyle = ICE2; ctx.font = '600 16px "Cinzel", serif'; ctx.letterSpacing = "0.18em";
+      ctx.fillText(D.BODY_TYPE_LABELS[c.bodyType].toUpperCase(), px+pw/2, py+330); ctx.letterSpacing = "0px";
+      ctx.fillStyle = "rgba(171,220,244,0.55)"; ctx.font = '500 13px "Cinzel", serif';
+      ctx.fillText("НЕТ ФОТО", px+pw/2, py+400); ctx.textAlign = "left";
+
+      let sy = py + ph + 18;
+      [["пол", c.gender], ["возраст", c.ageGroup], ["ориентация", c.orientation], ["страна", c.country]].forEach(([k,v]) => {
+        if (!v) return; stat(k, v, px, sy, pw); sy += 36;
+      });
 
       const occ = (c.occupationRole && c.occupationTag) ? `${cap(c.occupationRole)} · ${cap(c.occupationTag)}` : "";
-      fillR(px, py+ph+16, pw, occ ? 118 : 78, 8, "rgba(171,220,244,0.08)");
-      lab("Class", px+16, py+ph+38);
-      val(D.BODY_TYPE_LABELS[c.bodyType], px+16, py+ph+64, pw-32, 22);
-      if (occ) {
-        lab("Endorsement", px+16, py+ph+92);
-        ctx.fillStyle = ICE2; ctx.font = 'italic 500 18px "EB Garamond", Georgia, serif'; ctx.textAlign = "left";
-        wrapText(ctx, occ, pw-32).slice(0,2).forEach((line,i) => ctx.fillText(line, px+16, py+ph+116 + i*20));
-      }
-
-      const dx = 430; let y = 158;
-      const issued = new Date(c.createdAt || Date.now());
-      const iss = Number.isNaN(issued.getTime()) ? "—" : issued.toLocaleDateString("en-US", { month:"2-digit", day:"2-digit", year:"numeric" });
-      cell("ID", dossierCode(c.id), dx, y, 240);
-      cell("ISS", iss, dx+260, y, 160);
-      cell("EXP", "NONE", dx+440, y, 160);
-      cell("CLASS", D.BODY_TYPE_LABELS[c.bodyType], dx+620, y, 230);
-      y += 62;
-      lab("Name / Species", dx, y); y += 30;
-      ctx.fillStyle = ICE; ctx.font = '700 44px "EB Garamond", Georgia, serif';
-      wrapText(ctx, species.toUpperCase(), 1100).slice(0,2).forEach((line) => { ctx.fillText(line, dx, y); y += 48; });
-      y += 8;
-      const rowY = y;
-      let cx = dx;
-      [["Sex", c.gender, 200], ["Age", c.ageGroup, 220], ["Nat", c.country, 240], ["Orient", c.orientation, 280]].forEach(([label, value, w]) => {
-        if (!value) return;
-        cell(label, value, cx, rowY, w);
-        cx += w + 16;
+      const fields = [];
+      if (species) fields.push(["Вид", species]);
+      if (occ) fields.push(["Занятие", occ]);
+      if (c.setting) fields.push(["Сеттинг", c.setting]);
+      if (c.archetype) fields.push(["Архетип", c.archetype]);
+      if (c.plotTwist) fields.push(["Поворот сюжета", c.plotTwist]);
+      if (c.marks) fields.push(["Приметы", c.marks.length ? c.marks.map(cap).join(" · ") : "Нет"]);
+      if (c.traits) fields.push(["Характер", c.traits.length ? c.traits.map(cap).join(" · ") : "Нет"]);
+      let fy = 160, rx = 478, rw = 1000;
+      fields.forEach((field, i) => {
+        const long = field[0] === "Поворот сюжета" || field[0] === "Приметы" || field[0] === "Характер";
+        fy = numbered(i+1, field[0], field[1], rx, fy, rw, long ? 2 : 1);
       });
-      y = rowY + 64;
-      if (c.setting) cell("Setting", c.setting, dx, y, 430);
-      if (c.archetype) cell("Archetype", c.archetype, dx+450, y, 400);
-      if (c.setting || c.archetype) y += 64;
-      if (c.marks) {
-        lab("Distinguishing marks", dx, y); y += 26;
-        ctx.fillStyle = ICE; ctx.font = '500 20px "EB Garamond", Georgia, serif';
-        const marks = c.marks.length ? c.marks.map(cap).join(" · ") : "None";
-        wrapText(ctx, marks, 1080).slice(0,2).forEach((line) => { ctx.fillText(line, dx, y); y += 24; });
-        y += 8;
-      }
-      if (c.traits) {
-        lab("Traits", dx, y); y += 26;
-        ctx.fillStyle = ICE; ctx.font = '500 20px "EB Garamond", Georgia, serif';
-        const traits = c.traits.length ? c.traits.map(cap).join(" · ") : "None";
-        wrapText(ctx, traits, 1080).slice(0,2).forEach((line) => { ctx.fillText(line, dx, y); y += 24; });
-      }
-      const sigY = 880;
-      ctx.strokeStyle = "rgba(232,213,163,0.55)"; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(dx, sigY); ctx.lineTo(W-64, sigY); ctx.stroke();
-      lab("Signature", dx, sigY-10);
-      const plot = c.plotTwist ? cap(c.plotTwist) : species;
-      ctx.fillStyle = ICE; ctx.font = 'italic 500 22px "EB Garamond", Georgia, serif';
-      ctx.fillText(wrapText(ctx, plot, 1080)[0] || plot, dx, sigY-18);
-      ctx.fillStyle = "rgba(232,213,163,0.55)"; ctx.font = '500 10px "Cinzel", serif'; ctx.letterSpacing = "0.14em";
-      ctx.fillText("THIS CARD IS NOT A GOVERNMENT DOCUMENT  ·  PERSONA REGISTRY", 56, 968);
-      ctx.letterSpacing = "0px";
+
+      ctx.save(); ctx.translate(1496, 206); ctx.rotate(-0.12);
+      ctx.strokeStyle = "rgba(171,220,244,0.55)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0,0,78,0,Math.PI*2); ctx.stroke();
+      ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0,0,68,0,Math.PI*2); ctx.stroke();
+      ctx.fillStyle = "rgba(171,220,244,0.7)"; ctx.font = '600 11px "Cinzel", serif'; ctx.textAlign = "center";
+      ctx.letterSpacing = "0.22em"; ctx.fillText("PERSONA", 0, -12);
+      ctx.letterSpacing = "0.12em"; ctx.font = '600 13px "Cinzel", serif';
+      ctx.fillText(D.BODY_TYPE_LABELS[c.bodyType].toUpperCase(), 0, 10);
+      ctx.letterSpacing = "0px"; ctx.font = '500 9px "Cinzel", serif'; ctx.fillText("РЕЕСТР", 0, 28);
+      ctx.restore();
+
+      const issued = new Date(c.createdAt || Date.now());
+      const iss = Number.isNaN(issued.getTime()) ? "" : issued.toLocaleDateString("ru-RU");
+      const serial = String(c.id || "").replace(/-/g, "").slice(0, 12).toUpperCase();
+      ctx.fillStyle = "rgba(171,220,244,0.55)"; ctx.font = '500 13px "Cinzel", serif';
+      ctx.letterSpacing = "0.28em"; ctx.textAlign = "left"; ctx.fillText(serial.split("").join("  "), 52, 956);
+      ctx.textAlign = "right"; ctx.letterSpacing = "0.12em";
+      ctx.fillText(iss ? "дата выдачи  " + iss : "", W-52, 956);
+      ctx.letterSpacing = "0px"; ctx.textAlign = "left";
       ctx.restore();
       return await new Promise((resolve, reject) => canvas.toBlob((b) => b ? resolve(b) : reject(new Error("jpg")), "image/jpeg", 0.94));
     }
