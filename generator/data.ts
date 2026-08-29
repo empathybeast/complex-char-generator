@@ -1,7 +1,6 @@
 import type { BodyType, FieldGroup, FieldState } from "./types";
 
 export const FIELD_LABELS: Record<
-  | "name"
   | "country"
   | "gender"
   | "orientation"
@@ -15,7 +14,6 @@ export const FIELD_LABELS: Record<
   | "plotTwist",
   string
 > = {
-  name: "Имя",
   country: "Страна",
   gender: "Пол",
   orientation: "Ориентация",
@@ -33,7 +31,7 @@ export const FIELD_GROUPS: FieldGroup[] = [
   {
     id: "identity",
     title: "Личность",
-    fields: ["name", "country", "gender", "orientation", "species", "ageGroup"],
+    fields: ["country", "gender", "orientation", "species", "ageGroup"],
   },
   {
     id: "occupation",
@@ -68,7 +66,6 @@ export const BODY_TYPE_HINTS: Record<BodyType, string> = {
 
 export function defaultFieldState(): FieldState {
   return {
-    name: { enabled: true, locked: false },
     country: { enabled: true, locked: false },
     gender: { enabled: true, locked: false },
     orientation: { enabled: true, locked: false },
@@ -648,7 +645,7 @@ export const marksByBody: Record<BodyType, readonly string[]> = {
     "Витилиго",
     "Сеть мелких шрамов на конечностях",
     "Сломанный и криво сросшийся нос",
-    "Острый кадык"
+    "Острый кадык",
     "Глубокие тени под глазами",
     "Видимые сосуды на лице",
     "Выбритые виски",
@@ -2942,7 +2939,6 @@ monster: [
 };
 
 export const traits = [
-  [
   "Скрытный",
   "Вспыльчивый",
   "Ироничный",
@@ -3285,7 +3281,6 @@ export const traits = [
   "Чувствительный к мелочам",
   "Тупой к намёкам",
   "Понимающий без слов",
-]
 ] as const;
 
 export const plotTwists = [
