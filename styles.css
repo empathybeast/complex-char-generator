@@ -1,0 +1,207 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "EB Garamond", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-label: "Cinzel", "Times New Roman", serif;
+
+  --color-background: #020f29;
+  --color-foreground: #abdcf4;
+  --color-card: #000000;
+  --color-card-foreground: #abdcf4;
+  --color-elevated: color-mix(in oklab, #abdcf4 16%, #020f29);
+  --color-primary: #9bd6f2;
+  --color-primary-foreground: #020f29;
+  --color-secondary: color-mix(in oklab, #abdcf4 16%, #020f29);
+  --color-secondary-foreground: #abdcf4;
+  --color-muted: color-mix(in oklab, #abdcf4 16%, #020f29);
+  --color-muted-foreground: #9bd6f2;
+  --color-subtle: color-mix(in oklab, #abdcf4 68%, #020f29);
+  --color-accent: #abdcf4;
+  --color-accent-foreground: #020f29;
+  --color-border: color-mix(in oklab, #abdcf4 72%, transparent);
+  --color-input: color-mix(in oklab, #abdcf4 72%, transparent);
+  --color-ring: #9bd6f2;
+  --color-destructive: #b91c1c;
+  --color-ink: #000000;
+  --color-ice: #abdcf4;
+  --color-ice-2: #9bd6f2;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius: 12px;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html,
+  body,
+  #app {
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    font-family: var(--font-display);
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  .gothic-veil {
+    background-color: var(--color-background);
+    background-image:
+      radial-gradient(ellipse 58% 36% at 50% -4%, color-mix(in oklab, var(--color-ice-2) 22%, transparent), transparent 68%),
+      radial-gradient(circle at 6% 94%, color-mix(in oklab, var(--color-ice) 10%, transparent), transparent 28%),
+      radial-gradient(circle at 96% 8%, color-mix(in oklab, var(--color-ice-2) 11%, transparent), transparent 24%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cpath d='M48 10 C52 22 62 32 48 48 C34 32 44 22 48 10 Z M48 86 C52 74 62 64 48 48 C34 64 44 74 48 86 Z M10 48 C22 52 32 62 48 48 C32 34 22 44 10 48 Z M86 48 C74 52 64 62 48 48 C64 34 74 44 86 48 Z' fill='none' stroke='%23ABDCF4' stroke-opacity='0.08' stroke-width='1'/%3E%3Cpath d='M48 40 L52 48 L48 56 L44 48 Z' fill='%239BD6F2' fill-opacity='0.09'/%3E%3C/svg%3E");
+    background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  }
+
+  .gothic-panel {
+    background: var(--color-ink);
+    border-radius: 24px;
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-ice) 88%, transparent),
+      0 0 0 7px var(--color-ink),
+      0 0 0 8px color-mix(in oklab, var(--color-ice-2) 70%, transparent),
+      0 26px 56px color-mix(in oklab, #000 72%, transparent);
+    outline: 1px solid color-mix(in oklab, var(--color-ice) 42%, transparent);
+    outline-offset: -16px;
+  }
+
+  .gothic-lace {
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.92;
+  }
+
+  .gothic-lace-top,
+  .gothic-lace-bottom {
+    left: 44px;
+    right: 44px;
+    height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='14' viewBox='0 0 48 14' fill='none'%3E%3Cpath d='M0 11 C6 11 7 3 14 3 C18 3 19 7 24 7 C29 7 30 3 34 3 C41 3 42 11 48 11' stroke='%23ABDCF4' stroke-width='1'/%3E%3Cpath d='M14 3 C16 7 20 8 24 8 C28 8 32 7 34 3' stroke='%239BD6F2' stroke-opacity='0.75' stroke-width='0.85'/%3E%3Cpath d='M14 3 L16.4 6.8 L14 10.4 L11.6 6.8 Z' fill='%239BD6F2'/%3E%3Cpath d='M34 3 L36.4 6.8 L34 10.4 L31.6 6.8 Z' fill='%239BD6F2'/%3E%3Ccircle cx='24' cy='7.4' r='1.3' fill='%23ABDCF4'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-size: 48px 14px;
+  }
+
+  .gothic-lace-top {
+    top: 6px;
+  }
+
+  .gothic-lace-bottom {
+    bottom: 6px;
+    transform: scaleY(-1);
+  }
+
+  .gothic-lace-left,
+  .gothic-lace-right {
+    top: 44px;
+    bottom: 44px;
+    width: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='48' viewBox='0 0 14 48' fill='none'%3E%3Cpath d='M11 0 C11 6 3 7 3 14 C3 18 7 19 7 24 C7 29 3 30 3 34 C3 41 11 42 11 48' stroke='%23ABDCF4' stroke-width='1'/%3E%3Cpath d='M3 14 C7 16 8 20 8 24 C8 28 7 32 3 34' stroke='%239BD6F2' stroke-opacity='0.75' stroke-width='0.85'/%3E%3Cpath d='M3 14 L6.8 16.4 L10.4 14 L6.8 11.6 Z' fill='%239BD6F2'/%3E%3Cpath d='M3 34 L6.8 36.4 L10.4 34 L6.8 31.6 Z' fill='%239BD6F2'/%3E%3Ccircle cx='7.4' cy='24' r='1.3' fill='%23ABDCF4'/%3E%3C/svg%3E");
+    background-repeat: repeat-y;
+    background-size: 14px 48px;
+  }
+
+  .gothic-lace-left {
+    left: 6px;
+  }
+
+  .gothic-lace-right {
+    right: 6px;
+    transform: scaleX(-1);
+  }
+
+  .gothic-window {
+    position: relative;
+    isolation: isolate;
+    background: color-mix(in oklab, var(--color-ice) 9%, #000000);
+    border-radius: 12px;
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-ice) 86%, transparent),
+      inset 0 0 0 1px color-mix(in oklab, var(--color-ice-2) 28%, transparent),
+      inset 0 0 22px color-mix(in oklab, var(--color-ice) 8%, transparent);
+  }
+
+  .gothic-window::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+      linear-gradient(var(--color-ice), var(--color-ice)) top left / 9px 1.25px no-repeat,
+      linear-gradient(var(--color-ice), var(--color-ice)) top left / 1.25px 9px no-repeat,
+      linear-gradient(var(--color-ice), var(--color-ice)) top right / 9px 1.25px no-repeat,
+      linear-gradient(var(--color-ice), var(--color-ice)) top right / 1.25px 9px no-repeat,
+      linear-gradient(var(--color-ice), var(--color-ice)) bottom left / 9px 1.25px no-repeat,
+      linear-gradient(var(--color-ice), var(--color-ice)) bottom left / 1.25px 9px no-repeat,
+      linear-gradient(var(--color-ice), var(--color-ice)) bottom right / 9px 1.25px no-repeat,
+      linear-gradient(var(--color-ice), var(--color-ice)) bottom right / 1.25px 9px no-repeat;
+    opacity: 0.88;
+  }
+
+  .gothic-window:hover {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-ice) 96%, transparent),
+      inset 0 0 0 1px color-mix(in oklab, var(--color-ice-2) 38%, transparent),
+      inset 0 0 26px color-mix(in oklab, var(--color-ice) 12%, transparent);
+  }
+
+  .gothic-window-on {
+    background: color-mix(in oklab, var(--color-ice) 24%, #000000);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-ice) 98%, transparent),
+      0 0 22px color-mix(in oklab, var(--color-ice-2) 28%, transparent),
+      inset 0 0 0 1px color-mix(in oklab, var(--color-ice-2) 42%, transparent),
+      inset 0 0 28px color-mix(in oklab, var(--color-ice) 14%, transparent);
+  }
+
+  .gothic-window-off {
+    background: color-mix(in oklab, var(--color-ice) 5%, #000000);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-ice) 48%, transparent),
+      inset 0 0 0 1px color-mix(in oklab, var(--color-ice-2) 14%, transparent);
+  }
+
+  .gothic-window-off::before {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

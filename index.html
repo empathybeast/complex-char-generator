@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Персона · генератор персонажей</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=EB+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,500&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #020F29;
+      --ink: #000000;
+      --ice: #ABDCF4;
+      --ice-2: #9BD6F2;
+      --fg: #ABDCF4;
+      --subtle: color-mix(in oklab, #ABDCF4 68%, #020F29);
+      --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+      --font-display: "EB Garamond", Georgia, serif;
+      --font-label: "Cinzel", "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+    button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
+    button:disabled { opacity: 0.4; cursor: default; }
+    .veil {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 58% 36% at 50% -4%, color-mix(in oklab, var(--ice-2) 22%, transparent), transparent 68%),
+        radial-gradient(circle at 6% 94%, color-mix(in oklab, var(--ice) 10%, transparent), transparent 28%),
+        radial-gradient(circle at 96% 8%, color-mix(in oklab, var(--ice-2) 11%, transparent), transparent 24%);
+    }
+    .wrap {
+      position: relative; z-index: 1;
+      max-width: 1120px; margin: 0 auto;
+      padding: 2rem 1rem 3rem;
+      display: flex; flex-direction: column; gap: 2rem;
+    }
+    header.hero { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+    header.hero .kicker {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: var(--subtle);
+    }
+    h1 { font-family: var(--font-display); font-size: clamp(2.6rem, 6vw, 3.8rem); font-weight: 500; letter-spacing: -0.03em; }
+    .lede { max-width: 28rem; font-size: 0.9rem; line-height: 1.6; color: var(--ice-2); }
+    .layout {
+      display: grid; gap: 2rem;
+      grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    .panel {
+      position: relative;
+      background: var(--ink);
+      border-radius: 24px;
+      padding: 2rem 1.6rem 1.6rem;
+      box-shadow:
+        0 0 0 1px color-mix(in oklab, var(--ice) 88%, transparent),
+        0 0 0 7px var(--ink),
+        0 0 0 8px color-mix(in oklab, var(--ice-2) 70%, transparent),
+        0 26px 56px color-mix(in oklab, #000 72%, transparent);
+      outline: 1px solid color-mix(in oklab, var(--ice) 42%, transparent);
+      outline-offset: -16px;
+    }
+    .lace { position: absolute; pointer-events: none; z-index: 2; opacity: 0.92; }
+    .lace-h { left: 44px; right: 44px; height: 14px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='14' viewBox='0 0 48 14' fill='none'%3E%3Cpath d='M0 11 C6 11 7 3 14 3 C18 3 19 7 24 7 C29 7 30 3 34 3 C41 3 42 11 48 11' stroke='%23ABDCF4' stroke-width='1'/%3E%3Cpath d='M14 3 L16.4 6.8 L14 10.4 L11.6 6.8 Z' fill='%239BD6F2'/%3E%3Cpath d='M34 3 L36.4 6.8 L34 10.4 L31.6 6.8 Z' fill='%239BD6F2'/%3E%3Ccircle cx='24' cy='7.4' r='1.3' fill='%23ABDCF4'/%3E%3C/svg%3E");
+      background-repeat: repeat-x; background-size: 48px 14px;
+    }
+    .lace-top { top: 6px; }
+    .lace-bottom { bottom: 6px; transform: scaleY(-1); }
+    .lace-v { top: 44px; bottom: 44px; width: 14px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='48' viewBox='0 0 14 48' fill='none'%3E%3Cpath d='M11 0 C11 6 3 7 3 14 C3 18 7 19 7 24 C7 29 3 30 3 34 C3 41 11 42 11 48' stroke='%23ABDCF4' stroke-width='1'/%3E%3Ccircle cx='7.4' cy='24' r='1.3' fill='%23ABDCF4'/%3E%3C/svg%3E");
+      background-repeat: repeat-y; background-size: 14px 48px;
+    }
+    .lace-left { left: 6px; }
+    .lace-right { right: 6px; transform: scaleX(-1); }
+    .corner { position: absolute; z-index: 3; width: 56px; height: 56px; color: var(--ice); pointer-events: none; }
+    .c-tl { top: 2px; left: 2px; }
+    .c-tr { top: 2px; right: 2px; transform: scaleX(-1); }
+    .c-bl { bottom: 2px; left: 2px; transform: scaleY(-1); }
+    .c-br { bottom: 2px; right: 2px; transform: scale(-1); }
+    .jewel { position: absolute; z-index: 3; width: 32px; height: 16px; color: var(--ice); pointer-events: none; }
+    .j-t { top: 2px; left: 50%; transform: translateX(-50%); }
+    .j-b { bottom: 2px; left: 50%; transform: translateX(-50%) rotate(180deg); }
+    .j-l { left: 2px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+    .j-r { right: 2px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+    .window {
+      position: relative;
+      background: color-mix(in oklab, var(--ice) 9%, #000);
+      border-radius: 12px;
+      box-shadow:
+        0 0 0 1px color-mix(in oklab, var(--ice) 86%, transparent),
+        inset 0 0 0 1px color-mix(in oklab, var(--ice-2) 28%, transparent);
+    }
+    .window::before {
+      content: ""; position: absolute; inset: 5px; pointer-events: none; border-radius: inherit;
+      background:
+        linear-gradient(var(--ice), var(--ice)) top left / 9px 1.25px no-repeat,
+        linear-gradient(var(--ice), var(--ice)) top left / 1.25px 9px no-repeat,
+        linear-gradient(var(--ice), var(--ice)) top right / 9px 1.25px no-repeat,
+        linear-gradient(var(--ice), var(--ice)) top right / 1.25px 9px no-repeat,
+        linear-gradient(var(--ice), var(--ice)) bottom left / 9px 1.25px no-repeat,
+        linear-gradient(var(--ice), var(--ice)) bottom left / 1.25px 9px no-repeat,
+        linear-gradient(var(--ice), var(--ice)) bottom right / 9px 1.25px no-repeat,
+        linear-gradient(var(--ice), var(--ice)) bottom right / 1.25px 9px no-repeat;
+      opacity: 0.88;
+    }
+    .window.on {
+      background: color-mix(in oklab, var(--ice) 24%, #000);
+      box-shadow:
+        0 0 0 1px color-mix(in oklab, var(--ice) 98%, transparent),
+        0 0 22px color-mix(in oklab, var(--ice-2) 28%, transparent),
+        inset 0 0 0 1px color-mix(in oklab, var(--ice-2) 42%, transparent);
+    }
+    .window.off {
+      background: color-mix(in oklab, var(--ice) 5%, #000);
+      box-shadow:
+        0 0 0 1px color-mix(in oklab, var(--ice) 48%, transparent),
+        inset 0 0 0 1px color-mix(in oklab, var(--ice-2) 14%, transparent);
+    }
+    .window.off::before { opacity: 0.45; }
+    legend, .label, .group-title {
+      display: block; width: 100%; text-align: center;
+      font-size: 11px; font-weight: 500; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--subtle);
+    }
+    fieldset { border: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+    .morph { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    @media (min-width: 640px) { .morph { grid-template-columns: repeat(4, 1fr); } }
+    .morph button {
+      min-height: 56px; border: 0; color: var(--fg); font: inherit;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; padding: 0.5rem;
+    }
+    .morph button.active {
+      background: var(--ice-2); color: var(--bg);
+      box-shadow: 0 0 0 1px var(--ice-2), 0 0 18px color-mix(in oklab, var(--ice-2) 40%, transparent);
+    }
+    .morph button.active::before { display: none; }
+    .morph small { font-size: 10px; opacity: 0.75; }
+    .hint { text-align: center; font-size: 12px; line-height: 1.5; color: var(--ice-2); }
+    .stack { display: flex; flex-direction: column; gap: 0.5rem; }
+    .btn {
+      font: inherit; border: 0; color: var(--fg);
+      min-height: 44px; padding: 0.6rem 1rem; border-radius: 12px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+    }
+    .btn:active:not(:disabled) { transform: scale(0.97); }
+    .btn-primary { background: var(--ice-2); color: var(--bg); font-weight: 600; min-height: 48px; font-size: 1rem; }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.06); }
+    .btn-ghost { background: transparent; color: var(--subtle); min-width: 36px; min-height: 36px; padding: 0; }
+    .btn-ghost:hover { color: var(--fg); }
+    .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    @media (max-width: 520px) { .opt-grid { grid-template-columns: 1fr; } }
+    .opt {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+      min-height: 44px; padding: 0.55rem 0.85rem; cursor: pointer; font-size: 0.9rem;
+    }
+    .opt input { position: absolute; opacity: 0; pointer-events: none; }
+    .check {
+      width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0;
+      border: 1px solid color-mix(in oklab, var(--ice) 72%, transparent);
+      display: grid; place-items: center;
+    }
+    .opt.on .check { background: var(--ice-2); border-color: var(--ice-2); color: var(--bg); }
+    .count { text-align: center; font-size: 12px; color: var(--subtle); }
+    .dossier-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+    .code { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.18em; color: var(--subtle); }
+    .body-tag { font-family: var(--font-display); font-size: 0.95rem; color: var(--ice-2); }
+    .actions { display: flex; }
+    .field { display: flex; flex-direction: column; align-items: center; padding: 1rem 0; text-align: center; }
+    .field .name { font-family: var(--font-display); font-size: 1.85rem; letter-spacing: -0.02em; line-height: 1.15; }
+    .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-top: 0.35rem; }
+    .chip { display: inline-block; padding: 0.45rem 0.9rem; font-size: 0.9rem; }
+    .empty { min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 0.5rem; padding: 2rem 1rem; }
+    .empty h2 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 500; }
+    .hist-item { width: 100%; text-align: left; padding: 0.6rem 0.85rem; color: var(--fg); font: inherit; border: 0; display: flex; flex-direction: column; }
+    .hist-item span { font-size: 0.9rem; }
+    .hist-item small { font-size: 12px; color: var(--subtle); margin-top: 2px; }
+    .toast {
+      position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: var(--fg); padding: 0.6rem 1rem; border-radius: 12px;
+      box-shadow: 0 0 0 1px color-mix(in oklab, var(--ice) 80%, transparent);
+      z-index: 40; font-size: 0.9rem; opacity: 0; pointer-events: none; transition: opacity 180ms ease;
+    }
+    .toast.show { opacity: 1; }
+    dialog {
+      border: 0; padding: 0; background: var(--ink); color: var(--fg);
+      width: min(28rem, 100%); height: 100%; max-height: 100%;
+      margin: 0 0 0 auto;
+      box-shadow: 0 0 0 1px color-mix(in oklab, var(--ice) 68%, transparent);
+      outline: 1px solid color-mix(in oklab, var(--ice-2) 50%, transparent);
+      outline-offset: -8px;
+    }
+    dialog::backdrop { background: color-mix(in oklab, var(--bg) 70%, transparent); }
+    .sheet { display: flex; flex-direction: column; height: 100%; }
+    .sheet-head { padding: 1.25rem 1.25rem 0.75rem 1.25rem; padding-right: 3rem; }
+    .sheet-head h2 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 500; }
+    .sheet-body { overflow: auto; padding: 0 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .sheet-close { position: absolute; top: 1rem; right: 1rem; }
+    .aside { display: flex; flex-direction: column; gap: 1.25rem; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  </style>
+</head>
+<body>
+  <div class="veil" aria-hidden="true"></div>
+  <div class="wrap">
+    <header class="hero">
+      <svg viewBox="0 0 360 56" width="320" height="40" aria-hidden="true">
+        <path d="M20 48 C60 48 90 8 180 8 C270 8 300 48 340 48" fill="none" stroke="#ABDCF4" stroke-width="1.15" stroke-linecap="round"/>
+        <path d="M44 48 C80 48 104 16 180 16 C256 16 280 48 316 48" fill="none" stroke="#ABDCF4" stroke-width="1" opacity="0.7"/>
+        <path d="M180 4 L186 14 L180 20 L174 14 Z" fill="#ABDCF4"/>
+      </svg>
+      <svg viewBox="0 0 64 36" width="56" height="32" aria-hidden="true">
+        <path d="M32 3 L38 16 L32 33 L26 16 Z" fill="none" stroke="#ABDCF4" stroke-width="1.15"/>
+        <path d="M32 10 L35.2 16 L32 22.5 L28.8 16 Z" fill="#ABDCF4"/>
+        <path d="M8 16 H22 M42 16 H56" stroke="#ABDCF4" stroke-width="1" stroke-linecap="round"/>
+      </svg>
+      <p class="kicker">Генератор карточек</p>
+      <h1>Персона</h1>
+      <svg viewBox="0 0 420 36" width="280" height="24" aria-hidden="true">
+        <path d="M8 18 H128 M292 18 H412" stroke="#ABDCF4" stroke-opacity="0.55"/>
+        <path d="M210 6 L219 18 L210 30 L201 18 Z" fill="#ABDCF4"/>
+      </svg>
+      <p class="lede">Милая готика, вселенные и морфология. Выберите тело, пункты — и снимите досье.</p>
+    </header>
+
+    <div class="layout">
+      <aside class="aside">
+        <section class="panel" id="controls">
+          <span class="lace lace-h lace-top"></span><span class="lace lace-h lace-bottom"></span>
+          <span class="lace lace-v lace-left"></span><span class="lace lace-v lace-right"></span>
+        </section>
+      </aside>
+      <div class="aside">
+        <section class="panel" id="dossier"></section>
+        <section class="panel" id="history" hidden></section>
+      </div>
+    </div>
+  </div>
+  <dialog id="historyDialog">
+    <div class="sheet">
+      <div class="sheet-head">
+        <h2>История</h2>
+        <p class="hint" id="historyMeta"></p>
+      </div>
+      <button class="btn btn-ghost sheet-close" id="closeHistory" aria-label="Закрыть">✕</button>
+      <div class="sheet-body" id="historyAll"></div>
+    </div>
+  </dialog>
+  <div class="toast" id="toast" role="status"></div>
+
+  <svg class="sr" aria-hidden="true">
+    <symbol id="flourish" viewBox="0 0 72 72">
+      <path d="M4 54 V14 Q4 4 14 4 H54" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+      <path d="M11 46 V20 Q11 11 20 11 H46" fill="none" stroke="currentColor" stroke-opacity="0.72" stroke-width="1"/>
+      <path d="M46 11 C62 10 66 28 48 34 C32 40 30 16 52 20" fill="none" stroke="currentColor" stroke-width="1.1"/>
+      <path d="M20 20 l5.4-5.4 5.4 5.4-5.4 5.4 z" fill="currentColor"/>
+      <circle cx="4" cy="4" r="1.8" fill="currentColor"/>
+    </symbol>
+    <symbol id="jewel" viewBox="0 0 36 20">
+      <path d="M18 2.2 L22.4 10 L18 17.8 L13.6 10 Z" fill="currentColor"/>
+      <path d="M2 10 H8 M28 10 H34" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+    </symbol>
+  </svg>
+
+  <script id="persona-data" type="application/json">{"FIELD_LABELS":{"name":"Имя","country":"Страна","gender":"Пол","orientation":"Ориентация","species":"Вид","ageGroup":"Возрастная группа","occupation":"Занятие","setting":"Сеттинг","archetype":"Архетип","marks":"Приметы","traits":"Характер","plotTwist":"Поворот сюжета"},"FIELD_GROUPS":[{"id":"identity","title":"Личность","fields":["name","country","gender","orientation","species","ageGroup"]},{"id":"occupation","title":"Занятие","fields":["occupation"]},{"id":"world","title":"Мир","fields":["setting","archetype"]},{"id":"details","title":"Детали","fields":["marks","traits","plotTwist"]}],"BODY_TYPE_LABELS":{"humanoid":"Гуманоид","anthro":"Антро","feral":"Ферал","monster":"Монстр"},"BODY_TYPE_HINTS":{"humanoid":"Всё, что в целом похоже на человека — включая кентавра","anthro":"Антропоморфное животное, рыба, птица, насекомое","feral":"Обычное животное по строению тела","monster":"Чужое, хтоническое, почти нечеловеческое"},"countries":["Россия","Франция","Япония","Бразилия","Норвегия","Египет","США","Индия","Марокко","Корея","Исландия","Мексика","Германия","Таиланд","Австралия","Кения","Аргентина","Швеция","Китай","Италия","Польша","Нигерия","Иран","Канада"],"gendersByBody":{"humanoid":["Женщина","Мужчина","Небинарная персона","Гендерфлюид","Агендер","Бигендер"],"anthro":["Женщина","Мужчина","Небинарная персона","Гендерфлюид","Агендер","Бигендер"],"feral":["Самка","Самец","Не определяется"],"monster":["Женский аспект","Мужской аспект","Без пола","Переменный","Множественный"]},"ageGroupsByBody":{"humanoid":["Ребенок","Подросток","Young adult","Молодой","Средних лет","Зрелый","Пожилой","Старый"],"anthro":["Ребенок","Подросток","Young adult","Молодой","Средних лет","Зрелый","Пожилой","Старый"],"feral":["Детёныш","Подросток","Молодой","Взрослый","Зрелый","Старый"],"monster":["Новорождённый","Молодой","Зрелый","Древний","Вне возраста","Вековой"]},"orientations":["Гетеросексуальность","Гомосексуальность","Бисексуальность","Пансексуальность","Асексуальность","Демисексуальность","Квир","Гетероромантичность","Омнисексуальность"],"orientationsFeral":["Не выражена","Сезонная","Парная","Стаи"],"speciesByBody":{"humanoid":["Человек","Эльф","Вампир","Оборотень","Андроид","Фея","Демон","Ангел","Киборг","Дроу","Полуорк","Гном","Русалка","Дух","Тифлинг","Аасимар","Мутант","Кентавр"],"anthro":["Лис","Волк","Кот","Ворон","Олень","Заяц","Акула","Змея","Пчела","Выдра","Дракон","Ястреб","Рысь","Козёл","Мотылёк","Крокодил"],"feral":["Лисица","Волк","Рысь","Ворон","Олень","Акула","Змея","Ястреб","Заяц","Медведь","Выдра","Кот","Конь","Сова"],"monster":["Многоглазый страж","Слизень бездны","Кристаллид","Теневой рой","Хтоническое дитя","Инопланетный скиталец","Костяной левиафан","Шепчущая туманность","Живая геометрия","Пожиратель имён"]},"marksByBody":{"humanoid":["Шрам на левой брови","Татуировка в виде змеи","Гетерохромия","Веснушки по всему лицу","Серебряная прядь волос","Шрам на шее","Родинка над губой","Ожог на предплечье","Пирсинг в носу","Тонкий шрам на подбородке","Красные глаза","Тату руны на запястье","Белые волосы","Шрамы на костяшках","Ярко-зелёные глаза","Татуировка звезды за ухом"],"anthro":["Гетерохромия","Кольцо в ухе","Шрам на морде","Полосатый хвост","Мех с проседью","Пирсинг в брови","Обломанный клык","Ожог на предплечье","Белая отметина на груди","Серебряная прядь гривы","Шрам от когтей на плече","Разный цвет кистей","Кольца на хвосте","Выцветшие подушечки лап"],"feral":["Порванное ухо","Хромота на передней лапе","Белая отметина на груди","Шрам от когтей","Гетерохромия","Обломанный клык","Седина на морде","Кольцо-метка на лапе","След ожога на боку","Раздвоенный кончик хвоста","Шрам через нос","Редкие светлые перья"],"monster":["Лишняя челюсть","Глаз на ладони","Неправильная геометрия тени","Свечение трещин в коже","Второй контур, который запаздывает","Щупальце вместо пряди","Руны, которые сами ползут","Пустота вместо зрачка","Костяной гребень","Запах озона и мокрого железа","Дыра, через которую видно звёзды","Шёпот из закрытого рта"]},"settingsByBody":{"humanoid":["Киберпанк-мегаполис","Средневековое фэнтези","Постапокалипсис","Космическая станция","Викторианский Лондон","Альтернативные 80-е","Магический реализм современности","Неоготика","Славянское фэнтези","Стимпанк-империя","Холодная война","Античный полис"],"anthro":["Киберпанк-мегаполис","Средневековое фэнтези","Постапокалипсис","Магический реализм современности","Неоготика","Славянское фэнтези","Пустынный мир","Подводный город","Дальневосточное фэнтези","Стимпанк-империя"],"feral":["Славянское фэнтези","Пустынный мир","Средневековое фэнтези","Постапокалипсис","Подводный город","Арктическая колония","Магический реализм современности","Дальневосточное фэнтези"],"monster":["Космическая станция","Постапокалипсис","Неоготика","Подводный город","Пустынный мир","Арктическая колония","Магический реализм современности","Киберпанк-мегаполис","Средневековое фэнтези"]},"occupationRolesByBody":{"humanoid":["Лекарь","Охотник","Страж","Шпион","Учёный","Кузнец","Пилот","Жрец","Следопыт","Певец","Вор","Дипломат","Картограф","Медик","Курьер","Архивариус","Детектив","Инженер"],"anthro":["Лекарь","Охотник","Страж","Шпион","Учёный","Кузнец","Пилот","Жрец","Следопыт","Певец","Вор","Дипломат","Картограф","Медик","Курьер","Инженер"],"feral":["Вожак","Охотник","Следопыт","Страж","Разведчик","Целитель","Одиночка","Пастырь"],"monster":["Страж","Вестник","Пожиратель","Хранитель","Скиталец","Шептун","Жнец","Страж порога"]},"occupationTagsByBody":{"humanoid":["Выживший","Изгой","Наёмник","Наследник","Беглец","Ученик","Ветеран","Странник","Избранный","Ренегат"],"anthro":["Выживший","Изгой","Наёмник","Наследник","Беглец","Ученик","Ветеран","Странник","Избранный","Ренегат"],"feral":["Выживший","Изгой","Раненый","Старейшина","Скиталец","Избранный","Изгнанный","Одинокий"],"monster":["Бездны","Разлома","Пустоты","Роя","Древних","Порога","Туманности","Костей"]},"archetypesByBody":{"humanoid":["Воин","Маг","Странник","Учёный","Интриган","Целитель","Изгой","Тень","Лидер","Мудрец","Бунтарь","Наставник","Трикстер","Хранитель","Романтик","Охотник"],"anthro":["Воин","Странник","Целитель","Изгой","Тень","Лидер","Бунтарь","Трикстер","Хранитель","Охотник","Мудрец","Романтик"],"feral":["Вожак","Охотник","Тень","Одиночка","Хранитель","Странник","Трикстер","Страж","Изгой"],"monster":["Тень","Вестник","Пожиратель","Хранитель","Изгой","Мудрец","Хаос","Страж порога","Искуситель"]},"traits":["Скрытный","Вспыльчивый","Ироничный","Преданный","Циничный","Наивный","Расчётливый","Сострадательный","Гордый","Тревожный","Харизматичный","Упрямый","Молчаливый","Любознательный","Мстительный","Щепетильный","Беспечный","Педантичный"],"plotTwists":["Скрытое прошлое разрушит текущий союз","Придётся предать того, кого любит, чтобы спасти остальных","Сила внутри медленно его уничтожает","Долг перед родом против собственного выбора","Только этот персонаж помнит правду, которую стёрли","Контракт, подписанный в отчаянии, подходит к сроку","Ищет того, кого сам когда-то предал","Маска, без которой мир его не примет, трещит","Нужно выбрать между правдой и чужим спасением","Наследие, от которого нельзя отказаться и нельзя принять","Каждый успех кормит того, кого он ненавидит","Дом, который он защищает, построен на лжи","Время, отпущенное на искупление, почти вышло","То, что казалось проклятием, окажется ключом","Союзник с самого начала был другим лицом"],"namesByCountry":{"Россия":{"order":"given-family","givenF":[{"ru":"Анна","en":"Anna"},{"ru":"Мария","en":"Maria"},{"ru":"Елена","en":"Elena"},{"ru":"Дарья","en":"Daria"},{"ru":"София","en":"Sofia"},{"ru":"Ксения","en":"Ksenia"}],"givenM":[{"ru":"Иван","en":"Ivan"},{"ru":"Алексей","en":"Alexei"},{"ru":"Дмитрий","en":"Dmitry"},{"ru":"Никита","en":"Nikita"},{"ru":"Артём","en":"Artem"},{"ru":"Лев","en":"Lev"}],"givenU":[{"ru":"Саша","en":"Sasha"},{"ru":"Женя","en":"Zhenya"}],"familyF":[{"ru":"Соколова","en":"Sokolova"},{"ru":"Орлова","en":"Orlova"},{"ru":"Волкова","en":"Volkova"},{"ru":"Лебедева","en":"Lebedeva"},{"ru":"Ковалёва","en":"Kovaleva"}],"familyM":[{"ru":"Соколов","en":"Sokolov"},{"ru":"Орлов","en":"Orlov"},{"ru":"Волков","en":"Volkov"},{"ru":"Лебедев","en":"Lebedev"},{"ru":"Ковалёв","en":"Kovalev"}]},"Франция":{"order":"given-family","givenF":[{"ru":"Камиль","en":"Camille"},{"ru":"Леа","en":"Lea"},{"ru":"Жюльетт","en":"Juliette"},{"ru":"Манон","en":"Manon"},{"ru":"Элоиза","en":"Eloise"}],"givenM":[{"ru":"Луи","en":"Louis"},{"ru":"Тео","en":"Theo"},{"ru":"Рафаэль","en":"Raphael"},{"ru":"Этьен","en":"Etienne"},{"ru":"Огюст","en":"Auguste"}],"givenU":[{"ru":"Доминик","en":"Dominique"},{"ru":"Клод","en":"Claude"}],"familyAny":[{"ru":"Мартен","en":"Martin"},{"ru":"Дюран","en":"Durand"},{"ru":"Моро","en":"Moreau"},{"ru":"Лефевр","en":"Lefevre"},{"ru":"Руссо","en":"Rousseau"}]},"Япония":{"order":"family-given","givenF":[{"ru":"Юки","en":"Yuki"},{"ru":"Аой","en":"Aoi"},{"ru":"Хана","en":"Hana"},{"ru":"Мио","en":"Mio"},{"ru":"Сакура","en":"Sakura"}],"givenM":[{"ru":"Харуто","en":"Haruto"},{"ru":"Рэн","en":"Ren"},{"ru":"Кэнто","en":"Kento"},{"ru":"Сота","en":"Sota"},{"ru":"Харуки","en":"Haruki"}],"givenU":[{"ru":"Хикару","en":"Hikaru"},{"ru":"Аки","en":"Aki"}],"familyAny":[{"ru":"Сато","en":"Sato"},{"ru":"Судзуки","en":"Suzuki"},{"ru":"Такахаси","en":"Takahashi"},{"ru":"Танака","en":"Tanaka"},{"ru":"Ито","en":"Ito"}]},"Бразилия":{"order":"given-family","givenF":[{"ru":"Габриэла","en":"Gabriela"},{"ru":"Беатрис","en":"Beatriz"},{"ru":"Лара","en":"Lara"},{"ru":"Изабел","en":"Isabel"},{"ru":"Ана","en":"Ana"}],"givenM":[{"ru":"Тиагу","en":"Thiago"},{"ru":"Лукас","en":"Lucas"},{"ru":"Рафаэл","en":"Rafael"},{"ru":"Педру","en":"Pedro"},{"ru":"Энрике","en":"Enrique"}],"givenU":[{"ru":"Николас","en":"Nicolas"},{"ru":"Алекс","en":"Alex"}],"familyAny":[{"ru":"Силва","en":"Silva"},{"ru":"Сантос","en":"Santos"},{"ru":"Оливейра","en":"Oliveira"},{"ru":"Соуза","en":"Souza"},{"ru":"Кошта","en":"Costa"}]},"Норвегия":{"order":"given-family","givenF":[{"ru":"Ингрид","en":"Ingrid"},{"ru":"Фрея","en":"Freya"},{"ru":"Сигрид","en":"Sigrid"},{"ru":"Лив","en":"Liv"},{"ru":"Астрид","en":"Astrid"}],"givenM":[{"ru":"Эрик","en":"Erik"},{"ru":"Магнус","en":"Magnus"},{"ru":"Улав","en":"Olav"},{"ru":"Бьёрн","en":"Bjorn"},{"ru":"Сигурд","en":"Sigurd"}],"givenU":[{"ru":"Ким","en":"Kim"},{"ru":"Элли","en":"Ellie"}],"familyAny":[{"ru":"Хансен","en":"Hansen"},{"ru":"Йохансен","en":"Johansen"},{"ru":"Ульсен","en":"Olsen"},{"ru":"Берг","en":"Berg"},{"ru":"Лунд","en":"Lund"}]},"Египет":{"order":"given-family","givenF":[{"ru":"Ясмин","en":"Yasmin"},{"ru":"Нур","en":"Noor"},{"ru":"Фатима","en":"Fatima"},{"ru":"Лейла","en":"Leila"},{"ru":"Сара","en":"Sara"}],"givenM":[{"ru":"Омар","en":"Omar"},{"ru":"Юсуф","en":"Yusuf"},{"ru":"Карим","en":"Karim"},{"ru":"Хасан","en":"Hassan"},{"ru":"Ахмед","en":"Ahmed"}],"givenU":[{"ru":"Нур","en":"Noor"},{"ru":"Изз","en":"Izz"}],"familyAny":[{"ru":"Хасан","en":"Hassan"},{"ru":"Ибрагим","en":"Ibrahim"},{"ru":"Саид","en":"Said"},{"ru":"Фарук","en":"Farouk"},{"ru":"Нагиб","en":"Naguib"}]},"США":{"order":"given-family","givenF":[{"ru":"Эйвери","en":"Avery"},{"ru":"Мэй","en":"Mae"},{"ru":"Харпер","en":"Harper"},{"ru":"Элена","en":"Elena"},{"ru":"Джун","en":"June"}],"givenM":[{"ru":"Итан","en":"Ethan"},{"ru":"Калеб","en":"Caleb"},{"ru":"Ной","en":"Noah"},{"ru":"Майлз","en":"Miles"},{"ru":"Джулиан","en":"Julian"}],"givenU":[{"ru":"Ривер","en":"River"},{"ru":"Куинн","en":"Quinn"}],"familyAny":[{"ru":"Рид","en":"Reed"},{"ru":"Беннет","en":"Bennett"},{"ru":"Коул","en":"Cole"},{"ru":"Хейз","en":"Hayes"},{"ru":"Уокер","en":"Walker"}]},"Индия":{"order":"given-family","givenF":[{"ru":"Аанья","en":"Aanya"},{"ru":"Прия","en":"Priya"},{"ru":"Иша","en":"Isha"},{"ru":"Меера","en":"Meera"},{"ru":"Дия","en":"Diya"}],"givenM":[{"ru":"Арджун","en":"Arjun"},{"ru":"Вивек","en":"Vivek"},{"ru":"Рохан","en":"Rohan"},{"ru":"Каран","en":"Karan"},{"ru":"Аман","en":"Aman"}],"givenU":[{"ru":"Арья","en":"Arya"},{"ru":"Дев","en":"Dev"}],"familyAny":[{"ru":"Шарма","en":"Sharma"},{"ru":"Патэль","en":"Patel"},{"ru":"Редди","en":"Reddy"},{"ru":"Ийер","en":"Iyer"},{"ru":"Хан","en":"Khan"}]},"Марокко":{"order":"given-family","givenF":[{"ru":"Амина","en":"Amina"},{"ru":"Сафия","en":"Safia"},{"ru":"Иман","en":"Iman"},{"ru":"Зайнаб","en":"Zaynab"},{"ru":"Лейла","en":"Leila"}],"givenM":[{"ru":"Юнес","en":"Younes"},{"ru":"Амин","en":"Amin"},{"ru":"Тарик","en":"Tariq"},{"ru":"Рашид","en":"Rashid"},{"ru":"Ильяс","en":"Ilyas"}],"givenU":[{"ru":"Нур","en":"Noor"},{"ru":"Сами","en":"Sami"}],"familyAny":[{"ru":"Белькасем","en":"Belkacem"},{"ru":"Эль-Амини","en":"El Amini"},{"ru":"Беннани","en":"Bennani"},{"ru":"Идрисси","en":"Idrissi"},{"ru":"Шауи","en":"Chaoui"}]},"Корея":{"order":"family-given","givenF":[{"ru":"Соён","en":"Seoyeon"},{"ru":"Джиу","en":"Jiwoo"},{"ru":"Хаын","en":"Haeun"},{"ru":"Мина","en":"Mina"},{"ru":"Юна","en":"Yuna"}],"givenM":[{"ru":"Джунхо","en":"Junho"},{"ru":"Минджун","en":"Minjun"},{"ru":"Хёнджин","en":"Hyunjin"},{"ru":"Тэмин","en":"Taemin"},{"ru":"Сонъу","en":"Seongwoo"}],"givenU":[{"ru":"Харин","en":"Harin"},{"ru":"Джимин","en":"Jimin"}],"familyAny":[{"ru":"Ким","en":"Kim"},{"ru":"Ли","en":"Lee"},{"ru":"Пак","en":"Park"},{"ru":"Чон","en":"Jeong"},{"ru":"Чхве","en":"Choi"}]},"Исландия":{"order":"given-family","givenF":[{"ru":"Фрейя","en":"Freyja"},{"ru":"Бирта","en":"Birta"},{"ru":"Элин","en":"Elin"},{"ru":"Хельга","en":"Helga"},{"ru":"Уннур","en":"Unnur"}],"givenM":[{"ru":"Эйнар","en":"Einar"},{"ru":"Арнар","en":"Arnar"},{"ru":"Бьёрк","en":"Bjork"},{"ru":"Гуннар","en":"Gunnar"},{"ru":"Олафур","en":"Olafur"}],"givenU":[{"ru":"Алекс","en":"Alex"},{"ru":"Ким","en":"Kim"}],"familyF":[{"ru":"Гудмундсдоттир","en":"Gudmundsdottir"},{"ru":"Йонсдоттир","en":"Jonsdottir"},{"ru":"Эйнарсдоттир","en":"Einarsdottir"},{"ru":"Сигурдсдоттир","en":"Sigurdsdottir"}],"familyM":[{"ru":"Гудмундссон","en":"Gudmundsson"},{"ru":"Йонссон","en":"Jonsson"},{"ru":"Эйнарссон","en":"Einarsson"},{"ru":"Сигурдссон","en":"Sigurdsson"}]},"Мексика":{"order":"given-family","givenF":[{"ru":"Лусия","en":"Lucia"},{"ru":"Камила","en":"Camila"},{"ru":"Валентина","en":"Valentina"},{"ru":"Химена","en":"Jimena"},{"ru":"Рената","en":"Renata"}],"givenM":[{"ru":"Матео","en":"Mateo"},{"ru":"Диего","en":"Diego"},{"ru":"Себастьян","en":"Sebastian"},{"ru":"Эмилиано","en":"Emiliano"},{"ru":"Хоакин","en":"Joaquin"}],"givenU":[{"ru":"Алекс","en":"Alex"},{"ru":"Гуадалупе","en":"Guadalupe"}],"familyAny":[{"ru":"Эрнандес","en":"Hernandez"},{"ru":"Гарсия","en":"Garcia"},{"ru":"Мартинес","en":"Martinez"},{"ru":"Лопес","en":"Lopez"},{"ru":"Рамирес","en":"Ramirez"}]},"Германия":{"order":"given-family","givenF":[{"ru":"Лена","en":"Lena"},{"ru":"Ханна","en":"Hanna"},{"ru":"Мила","en":"Mila"},{"ru":"Фрида","en":"Frida"},{"ru":"Эмилия","en":"Emilia"}],"givenM":[{"ru":"Лукас","en":"Lukas"},{"ru":"Йонас","en":"Jonas"},{"ru":"Феликс","en":"Felix"},{"ru":"Леон","en":"Leon"},{"ru":"Макс","en":"Max"}],"givenU":[{"ru":"Ким","en":"Kim"},{"ru":"Саша","en":"Sascha"}],"familyAny":[{"ru":"Мюллер","en":"Muller"},{"ru":"Шмидт","en":"Schmidt"},{"ru":"Вебер","en":"Weber"},{"ru":"Фишер","en":"Fischer"},{"ru":"Вагнер","en":"Wagner"}]},"Таиланд":{"order":"given-family","givenF":[{"ru":"Налин","en":"Nalin"},{"ru":"Пим","en":"Pim"},{"ru":"Канья","en":"Kanya"},{"ru":"Мали","en":"Mali"},{"ru":"Арин","en":"Arin"}],"givenM":[{"ru":"Киат","en":"Kiat"},{"ru":"Нават","en":"Nawat"},{"ru":"Понг","en":"Pong"},{"ru":"Танак","en":"Thanak"},{"ru":"Чай","en":"Chai"}],"givenU":[{"ru":"Лин","en":"Lin"},{"ru":"Нам","en":"Nam"}],"familyAny":[{"ru":"Срисук","en":"Srisuk"},{"ru":"Вонгчай","en":"Wongchai"},{"ru":"Чайпрасерт","en":"Chaiprasert"},{"ru":"Пханич","en":"Phanich"},{"ru":"Саеттави","en":"Saettawi"}]},"Австралия":{"order":"given-family","givenF":[{"ru":"Мэйв","en":"Maeve"},{"ru":"Айла","en":"Isla"},{"ru":"Сьенна","en":"Sienna"},{"ru":"Харпер","en":"Harper"},{"ru":"Мэтти","en":"Mattie"}],"givenM":[{"ru":"Джек","en":"Jack"},{"ru":"Харри","en":"Harry"},{"ru":"Оскар","en":"Oscar"},{"ru":"Лаклан","en":"Lachlan"},{"ru":"Нэш","en":"Nash"}],"givenU":[{"ru":"Ривер","en":"River"},{"ru":"Кейси","en":"Casey"}],"familyAny":[{"ru":"Нг","en":"Ng"},{"ru":"Браун","en":"Brown"},{"ru":"Уилсон","en":"Wilson"},{"ru":"Тейлор","en":"Taylor"},{"ru":"Кларк","en":"Clark"}]},"Кения":{"order":"given-family","givenF":[{"ru":"Амина","en":"Amina"},{"ru":"Ванджиру","en":"Wanjiru"},{"ru":"Зари","en":"Zari"},{"ru":"Ньямбира","en":"Nyambira"},{"ru":"Имани","en":"Imani"}],"givenM":[{"ru":"Джабари","en":"Jabari"},{"ru":"Отиено","en":"Otieno"},{"ru":"Камау","en":"Kamau"},{"ru":"Киплигат","en":"Kiplagat"},{"ru":"Муги","en":"Mugi"}],"givenU":[{"ru":"Алекс","en":"Alex"},{"ru":"Сами","en":"Sami"}],"familyAny":[{"ru":"Отиено","en":"Otieno"},{"ru":"Камау","en":"Kamau"},{"ru":"Очиенг","en":"Ochieng"},{"ru":"Кипротич","en":"Kiprotich"},{"ru":"Мванги","en":"Mwangi"}]},"Аргентина":{"order":"given-family","givenF":[{"ru":"Соль","en":"Sol"},{"ru":"Эмилия","en":"Emilia"},{"ru":"Каталина","en":"Catalina"},{"ru":"Джульета","en":"Julieta"},{"ru":"Флоренсия","en":"Florencia"}],"givenM":[{"ru":"Бенхамин","en":"Benjamin"},{"ru":"Факундо","en":"Facundo"},{"ru":"Томас","en":"Tomas"},{"ru":"Николас","en":"Nicolas"},{"ru":"Сантьяго","en":"Santiago"}],"givenU":[{"ru":"Алекс","en":"Alex"},{"ru":"Инди","en":"Indi"}],"familyAny":[{"ru":"Гонсалес","en":"Gonzalez"},{"ru":"Родригес","en":"Rodriguez"},{"ru":"Фернандес","en":"Fernandez"},{"ru":"Лопес","en":"Lopez"},{"ru":"Диас","en":"Diaz"}]},"Швеция":{"order":"given-family","givenF":[{"ru":"Альва","en":"Alva"},{"ru":"Эбба","en":"Ebba"},{"ru":"Сага","en":"Saga"},{"ru":"Элин","en":"Elin"},{"ru":"Майя","en":"Maja"}],"givenM":[{"ru":"Вильгельм","en":"Wilhelm"},{"ru":"Ноэль","en":"Noel"},{"ru":"Аксель","en":"Axel"},{"ru":"Лиам","en":"Liam"},{"ru":"Элиас","en":"Elias"}],"givenU":[{"ru":"Ким","en":"Kim"},{"ru":"Ловиса","en":"Lovisa"}],"familyAny":[{"ru":"Андерссон","en":"Andersson"},{"ru":"Юханссон","en":"Johansson"},{"ru":"Нильссон","en":"Nilsson"},{"ru":"Линдберг","en":"Lindberg"},{"ru":"Бергстрём","en":"Bergstrom"}]},"Китай":{"order":"family-given","givenF":[{"ru":"Мэй","en":"Mei"},{"ru":"Линь","en":"Lin"},{"ru":"Сюэ","en":"Xue"},{"ru":"Янь","en":"Yan"},{"ru":"Цзин","en":"Jing"}],"givenM":[{"ru":"Вэй","en":"Wei"},{"ru":"Хао","en":"Hao"},{"ru":"Цзюнь","en":"Jun"},{"ru":"Чэнь","en":"Chen"},{"ru":"Бо","en":"Bo"}],"givenU":[{"ru":"Юй","en":"Yu"},{"ru":"Хэ","en":"He"}],"familyAny":[{"ru":"Ван","en":"Wang"},{"ru":"Ли","en":"Li"},{"ru":"Чжан","en":"Zhang"},{"ru":"Лю","en":"Liu"},{"ru":"Чэнь","en":"Chen"}]},"Италия":{"order":"given-family","givenF":[{"ru":"Джулия","en":"Giulia"},{"ru":"Кьяра","en":"Chiara"},{"ru":"Аврора","en":"Aurora"},{"ru":"Бьянка","en":"Bianca"},{"ru":"Франческа","en":"Francesca"}],"givenM":[{"ru":"Лоренцо","en":"Lorenzo"},{"ru":"Маттео","en":"Matteo"},{"ru":"Леонардо","en":"Leonardo"},{"ru":"Алессандро","en":"Alessandro"},{"ru":"Николо","en":"Nicolo"}],"givenU":[{"ru":"Андреа","en":"Andrea"},{"ru":"Саша","en":"Sasha"}],"familyAny":[{"ru":"Росси","en":"Rossi"},{"ru":"Феррари","en":"Ferrari"},{"ru":"Эспозито","en":"Esposito"},{"ru":"Риччи","en":"Ricci"},{"ru":"Конти","en":"Conti"}]},"Польша":{"order":"given-family","givenF":[{"ru":"Зофья","en":"Zofia"},{"ru":"Ханна","en":"Hanna"},{"ru":"Наталия","en":"Natalia"},{"ru":"Мая","en":"Maja"},{"ru":"Лаура","en":"Laura"}],"givenM":[{"ru":"Якуб","en":"Jakub"},{"ru":"Антоний","en":"Antoni"},{"ru":"Шимон","en":"Szymon"},{"ru":"Филип","en":"Filip"},{"ru":"Кацпер","en":"Kacper"}],"givenU":[{"ru":"Алекс","en":"Alex"},{"ru":"Никола","en":"Nikola"}],"familyF":[{"ru":"Новак","en":"Nowak"},{"ru":"Ковальская","en":"Kowalska"},{"ru":"Вишневская","en":"Wisniewska"},{"ru":"Каминская","en":"Kaminska"},{"ru":"Левандовская","en":"Lewandowska"}],"familyM":[{"ru":"Новак","en":"Nowak"},{"ru":"Ковальский","en":"Kowalski"},{"ru":"Вишневский","en":"Wisniewski"},{"ru":"Каминский","en":"Kaminski"},{"ru":"Левандовский","en":"Lewandowski"}]},"Нигерия":{"order":"given-family","givenF":[{"ru":"Адаезе","en":"Adaeze"},{"ru":"Чинома","en":"Chinoma"},{"ru":"Фолаке","en":"Folake"},{"ru":"Амина","en":"Amina"},{"ru":"Ифе","en":"Ife"}],"givenM":[{"ru":"Чиди","en":"Chidi"},{"ru":"Олувасеун","en":"Oluwaseun"},{"ru":"Эмека","en":"Emeka"},{"ru":"Тайво","en":"Taiwo"},{"ru":"Ибрагим","en":"Ibrahim"}],"givenU":[{"ru":"Ким","en":"Kim"},{"ru":"Сами","en":"Sami"}],"familyAny":[{"ru":"Окафор","en":"Okafor"},{"ru":"Адебайо","en":"Adebayo"},{"ru":"Балогун","en":"Balogun"},{"ru":"Нваосу","en":"Nwaosu"},{"ru":"Юсуф","en":"Yusuf"}]},"Иран":{"order":"given-family","givenF":[{"ru":"Ясмин","en":"Yasmin"},{"ru":"Париса","en":"Parisa"},{"ru":"Лейла","en":"Leila"},{"ru":"Сара","en":"Sara"},{"ru":"Наргис","en":"Narges"}],"givenM":[{"ru":"Реза","en":"Reza"},{"ru":"Каве","en":"Kaveh"},{"ru":"Ариан","en":"Arian"},{"ru":"Нима","en":"Nima"},{"ru":"Хоссейн","en":"Hossein"}],"givenU":[{"ru":"Ника","en":"Nika"},{"ru":"Арьян","en":"Aryan"}],"familyAny":[{"ru":"Хосейни","en":"Hosseini"},{"ru":"Мохаммади","en":"Mohammadi"},{"ru":"Резаи","en":"Rezaei"},{"ru":"Карими","en":"Karimi"},{"ru":"Ахмади","en":"Ahmadi"}]},"Канада":{"order":"given-family","givenF":[{"ru":"Элоди","en":"Elodie"},{"ru":"Мэйв","en":"Maeve"},{"ru":"Шарлотта","en":"Charlotte"},{"ru":"Амелия","en":"Amelia"},{"ru":"Ноа","en":"Noa"}],"givenM":[{"ru":"Лиам","en":"Liam"},{"ru":"Тео","en":"Theo"},{"ru":"Этьен","en":"Etienne"},{"ru":"Калеб","en":"Caleb"},{"ru":"Роуэн","en":"Rowan"}],"givenU":[{"ru":"Ривер","en":"River"},{"ru":"Куинн","en":"Quinn"}],"familyAny":[{"ru":"Трамбле","en":"Tremblay"},{"ru":"Рой","en":"Roy"},{"ru":"Ганьон","en":"Gagnon"},{"ru":"Макдональд","en":"Macdonald"},{"ru":"Сингх","en":"Singh"}]}},"fallbackCulture":{"order":"given-family","givenF":[{"ru":"Ирис","en":"Iris"},{"ru":"Нора","en":"Nora"},{"ru":"Мара","en":"Mara"},{"ru":"Эва","en":"Eva"},{"ru":"Лина","en":"Lina"}],"givenM":[{"ru":"Элиас","en":"Elias"},{"ru":"Роман","en":"Roman"},{"ru":"Кай","en":"Kai"},{"ru":"Нейл","en":"Neil"},{"ru":"Марк","en":"Mark"}],"givenU":[{"ru":"Рен","en":"Ren"},{"ru":"Саша","en":"Sasha"}],"familyAny":[{"ru":"Вейл","en":"Vale"},{"ru":"Кросс","en":"Cross"},{"ru":"Харт","en":"Hart"},{"ru":"Эш","en":"Ash"},{"ru":"Куинн","en":"Quinn"}]},"feralNames":[{"ru":"Серая Грива","en":"Grey Mane"},{"ru":"Тихий След","en":"Quiet Track"},{"ru":"Рваное Ухо","en":"Torn Ear"},{"ru":"Белая Лапа","en":"White Paw"},{"ru":"Ночная Река","en":"Night River"},{"ru":"Красный Клык","en":"Red Fang"},{"ru":"Пепельный Хвост","en":"Ash Tail"},{"ru":"Моховой Бок","en":"Moss Flank"},{"ru":"Лунный Крик","en":"Moon Cry"},{"ru":"Солевой Ветер","en":"Salt Wind"},{"ru":"Теневой Шаг","en":"Shadow Step"},{"ru":"Янтарная Грива","en":"Amber Mane"}],"monsterNames":[{"ru":"Ил'харет","en":"Il'haret"},{"ru":"Шёпот Бездны","en":"Abyss Whisper"},{"ru":"Восьмой Контур","en":"Eighth Contour"},{"ru":"Эш-Вара","en":"Esh-Vara"},{"ru":"Костяной Гимн","en":"Bone Hymn"},{"ru":"Нуль-Имя","en":"Null-Name"},{"ru":"Оракул Трещин","en":"Oracle of Cracks"},{"ru":"Велум","en":"Velum"},{"ru":"Семь Зрачков","en":"Seven Pupils"},{"ru":"Холодный Хор","en":"Cold Choir"},{"ru":"Ар'кел","en":"Ar'kel"},{"ru":"Море-в-Коже","en":"Sea-in-Skin"}]}</script>
+  <script>
+  (() => {
+    const D = JSON.parse(document.getElementById("persona-data").textContent);
+    const BODY_TYPES = ["humanoid", "anthro", "feral", "monster"];
+    const FIELD_IDS = ["name","country","gender","orientation","species","ageGroup","occupation","setting","archetype","marks","traits","plotTwist"];
+    const INDEPENDENT = ["country","gender","orientation","species","setting","archetype","plotTwist"];
+    const DEPENDENT = ["name","ageGroup","occupation","marks","traits"];
+    const MAX_HISTORY = 50;
+    const HISTORY_KEY = "persona.history.v3";
+    const STATE_KEY = "persona.fields.v3";
+    const BODY_KEY = "persona.body.v1";
+
+    const shortHint = { humanoid: "человек и близкие", anthro: "зверь на двух", feral: "зверь как есть", monster: "чужое" };
+
+    const defaultState = () => Object.fromEntries(FIELD_IDS.map((id) => [id, { enabled: true, locked: false }]));
+
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const shuffle = (arr) => {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    };
+    const pickUnique = (arr, n) => shuffle(arr).slice(0, Math.max(0, Math.min(n, arr.length)));
+    const cap = (t) => {
+      const s = String(t || "").trim();
+      return s ? s.charAt(0).toLocaleUpperCase("ru-RU") + s.slice(1) : s;
+    };
+    const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `per-${Date.now().toString(36)}`);
+
+    function genderBucket(gender) {
+      if (!gender) return "u";
+      const g = gender.toLowerCase();
+      if (g.includes("женщин") || g.includes("самка") || g.includes("женский")) return "f";
+      if (g.includes("мужчин") || g.includes("самец") || g.includes("мужской")) return "m";
+      return "u";
+    }
+    function joinName(order, given, family) {
+      if (!family) return `${given.ru} / ${given.en}`;
+      if (order === "family-given") return `${family.ru} ${given.ru} / ${family.en} ${given.en}`;
+      return `${given.ru} ${family.ru} / ${given.en} ${family.en}`;
+    }
+    function composeCultureName(culture, gender) {
+      const bucket = genderBucket(gender);
+      const givenPool = bucket === "f" ? [...culture.givenF, ...culture.givenU]
+        : bucket === "m" ? [...culture.givenM, ...culture.givenU]
+        : [...culture.givenU, ...culture.givenF, ...culture.givenM];
+      const familyPool = bucket === "f" ? (culture.familyF || culture.familyAny || [])
+        : bucket === "m" ? (culture.familyM || culture.familyAny || [])
+        : (culture.familyAny || [...(culture.familyF || []), ...(culture.familyM || [])]);
+      const given = pick(givenPool);
+      const family = familyPool.length ? pick(familyPool) : undefined;
+      return joinName(culture.order, given, family);
+    }
+    function generateName(body, country, gender) {
+      if (body === "feral") { const a = pick(D.feralNames); return `${a.ru} / ${a.en}`; }
+      if (body === "monster") { const a = pick(D.monsterNames); return `${a.ru} / ${a.en}`; }
+      return composeCultureName((country && D.namesByCountry[country]) || D.fallbackCulture, gender);
+    }
+    function orientationPool(body) {
+      return (body === "feral" || body === "monster") ? D.orientationsFeral : D.orientations;
+    }
+    function generateField(field, ctx) {
+      switch (field) {
+        case "name": return generateName(ctx.body, ctx.country, ctx.gender);
+        case "country": return pick(D.countries);
+        case "gender": return pick(D.gendersByBody[ctx.body]);
+        case "orientation": return pick(orientationPool(ctx.body));
+        case "species": return pick(D.speciesByBody[ctx.body]);
+        case "ageGroup": return pick(D.ageGroupsByBody[ctx.body]);
+        case "setting": return pick(D.settingsByBody[ctx.body]);
+        case "occupation": return { role: pick(D.occupationRolesByBody[ctx.body]), tag: pick(D.occupationTagsByBody[ctx.body]) };
+        case "archetype": return pick(D.archetypesByBody[ctx.body]);
+        case "marks": return pickUnique(D.marksByBody[ctx.body], 1 + Math.floor(Math.random() * 3));
+        case "traits": return pickUnique(D.traits, 2);
+        case "plotTwist": return pick(D.plotTwists);
+      }
+    }
+    function isValid(field, value, body) {
+      if (value == null) return false;
+      const has = (pool) => pool.some((x) => x.toLowerCase() === String(value).toLowerCase());
+      if (field === "gender") return has(D.gendersByBody[body]);
+      if (field === "species") return has(D.speciesByBody[body]);
+      if (field === "ageGroup") return has(D.ageGroupsByBody[body]);
+      if (field === "setting") return has(D.settingsByBody[body]);
+      if (field === "archetype") return has(D.archetypesByBody[body]);
+      if (field === "orientation") return has(orientationPool(body));
+      return true;
+    }
+    function keepLocked(field, state, prev, body) {
+      if (!state[field].enabled || !state[field].locked || !prev) return undefined;
+      if (field === "occupation") {
+        if (!prev.occupationRole || !prev.occupationTag) return undefined;
+        return { role: prev.occupationRole, tag: prev.occupationTag };
+      }
+      const cur = prev[field];
+      if (!isValid(field, cur, body)) return undefined;
+      return cur;
+    }
+    function generateCharacter(state, body, previous) {
+      const next = { id: newId(), createdAt: Date.now(), bodyType: body };
+      for (const field of INDEPENDENT) {
+        if (!state[field].enabled) continue;
+        const kept = keepLocked(field, state, previous, body);
+        next[field] = kept !== undefined ? kept : generateField(field, { body });
+      }
+      const ctx = { body, country: next.country, gender: next.gender, species: next.species, setting: next.setting };
+      for (const field of DEPENDENT) {
+        if (!state[field].enabled) continue;
+        const kept = keepLocked(field, state, previous, body);
+        const value = kept !== undefined ? kept : generateField(field, ctx);
+        if (field === "occupation") { next.occupationRole = value.role; next.occupationTag = value.tag; }
+        else next[field] = value;
+      }
+      return next;
+    }
+    function occupationLine(c) {
+      if (!c.occupationRole || !c.occupationTag) return null;
+      return `${c.occupationRole} + ${c.occupationTag}`;
+    }
+    function characterTitle(c) { return c.name || c.species || "Безымянный / Nameless"; }
+    function ruName(full) { return String(full).split(" / ")[0].trim(); }
+    function dossierCode(id) { return `PER-${id.replace(/-/g, "").slice(0, 4).toUpperCase() || "0000"}`; }
+    function formatText(c) {
+      const lines = ["— карточка персонажа —", `Морфология: ${D.BODY_TYPE_LABELS[c.bodyType]}`];
+      for (const field of FIELD_IDS) {
+        let val = field === "occupation" ? occupationLine(c) : c[field];
+        if (val == null) continue;
+        if (Array.isArray(val)) val = val.map(cap).join(", ");
+        else val = cap(String(val));
+        lines.push(`${D.FIELD_LABELS[field]}: ${val}`);
+      }
+      return lines.join("\n");
+    }
+
+    const NAVY = "#020F29", INK = "#000000", ICE = "#ABDCF4", ICE2 = "#9BD6F2", MUTED = "rgba(171,220,244,0.72)";
+    function wrapText(ctx, text, maxWidth) {
+      const words = String(text).split(/\s+/);
+      const lines = []; let cur = "";
+      for (const w of words) {
+        const next = cur ? `${cur} ${w}` : w;
+        if (ctx.measureText(next).width <= maxWidth) cur = next;
+        else { if (cur) lines.push(cur); cur = w; }
+      }
+      if (cur) lines.push(cur);
+      return lines.length ? lines : [text];
+    }
+    function diamond(ctx, x, y, r) {
+      ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill();
+    }
+    function roundRect(ctx, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+    function flourish(ctx, x, y, dx, dy) {
+      ctx.save(); ctx.strokeStyle = ICE; ctx.fillStyle = ICE; ctx.lineWidth = 1.35; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(x, y + 52 * dy); ctx.lineTo(x, y + 12 * dy); ctx.quadraticCurveTo(x, y, x + 12 * dx, y); ctx.lineTo(x + 52 * dx, y); ctx.stroke();
+      diamond(ctx, x + 18 * dx, y + 18 * dy, 5.5);
+      ctx.beginPath(); ctx.arc(x, y, 2.4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    function windowBox(ctx, x, y, w, h) {
+      ctx.fillStyle = "rgba(171,220,244,0.16)"; roundRect(ctx, x, y, w, h, 8); ctx.fill();
+      ctx.strokeStyle = ICE; ctx.globalAlpha = 0.95; ctx.lineWidth = 1.4; ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    async function renderCard(c) {
+      if (document.fonts) {
+        await Promise.all([
+          document.fonts.load('600 48px "EB Garamond"'),
+          document.fonts.load('500 13px "Cinzel"'),
+          document.fonts.load('500 18px "Figtree"'),
+        ]).catch(() => {});
+      }
+      const W = 1600, H = 900, M = 64;
+      const canvas = document.createElement("canvas"); canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = NAVY; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = INK; ctx.fillRect(36, 36, W - 72, H - 72);
+      ctx.strokeStyle = ICE; ctx.globalAlpha = 0.92; ctx.lineWidth = 1.6; ctx.strokeRect(36, 36, W - 72, H - 72);
+      ctx.globalAlpha = 0.62; ctx.lineWidth = 1.1; ctx.strokeRect(46, 46, W - 92, H - 92); ctx.globalAlpha = 1;
+      flourish(ctx, 52, 52, 1, 1); flourish(ctx, W - 52, 52, -1, 1); flourish(ctx, 52, H - 52, 1, -1); flourish(ctx, W - 52, H - 52, -1, -1);
+      let y = 96;
+      ctx.fillStyle = MUTED; ctx.font = '500 12px "Cinzel", serif'; ctx.letterSpacing = "0.28em"; ctx.textAlign = "left";
+      ctx.fillText(dossierCode(c.id), M, y);
+      ctx.textAlign = "center"; ctx.fillStyle = ICE2; ctx.fillText(D.BODY_TYPE_LABELS[c.bodyType].toUpperCase(), W / 2, y);
+      ctx.textAlign = "right"; ctx.fillStyle = MUTED; ctx.fillText("ПЕРСОНА", W - M, y);
+      ctx.letterSpacing = "0px"; y += 70;
+      ctx.fillStyle = ICE; ctx.font = '600 48px "EB Garamond", Georgia, serif'; ctx.textAlign = "center";
+      for (const line of wrapText(ctx, characterTitle(c), W - M * 2).slice(0, 2)) { ctx.fillText(line, W / 2, y); y += 54; }
+      const sub = [c.species, c.ageGroup, c.archetype].filter(Boolean).join("  ·  ");
+      if (sub) { ctx.fillStyle = MUTED; ctx.font = 'italic 400 22px "EB Garamond", Georgia, serif'; ctx.fillText(sub, W / 2, y); y += 36; }
+      const occ = occupationLine(c);
+      if (occ) {
+        y += 8; const [role, tag] = occ.split(" + ");
+        ctx.font = '500 20px "Figtree", sans-serif';
+        const roleW = Math.max(160, ctx.measureText(role || "").width + 48);
+        const tagW = Math.max(160, ctx.measureText(tag || "").width + 48);
+        let x = (W - (roleW + 36 + tagW)) / 2;
+        windowBox(ctx, x, y, roleW, 44); ctx.fillStyle = ICE; ctx.fillText(role || "", x + roleW / 2, y + 30);
+        x += roleW; ctx.fillStyle = MUTED; ctx.fillText("+", x + 18, y + 30); x += 36;
+        windowBox(ctx, x, y, tagW, 44); ctx.fillStyle = ICE; ctx.fillText(tag || "", x + tagW / 2, y + 30);
+        y += 70;
+      }
+      ctx.strokeStyle = "rgba(171,220,244,0.32)"; ctx.beginPath(); ctx.moveTo(M + 80, y); ctx.lineTo(W / 2 - 18, y); ctx.moveTo(W / 2 + 18, y); ctx.lineTo(W - M - 80, y); ctx.stroke();
+      ctx.fillStyle = ICE; diamond(ctx, W / 2, y, 5); y += 36;
+      const entries = [];
+      for (const field of FIELD_IDS) {
+        if (field === "name" || field === "occupation") continue;
+        let text = field === "occupation" ? occupationLine(c) : c[field];
+        if (text == null) continue;
+        if (Array.isArray(text)) text = text.join(" · ");
+        entries.push({ label: D.FIELD_LABELS[field], text: String(text) });
+      }
+      const cols = 3, colW = (W - M * 2) / cols, colH = Math.max(78, Math.floor((H - 70 - y) / Math.ceil(entries.length / cols || 1)));
+      entries.forEach((entry, i) => {
+        const col = i % cols, row = Math.floor(i / cols);
+        const cx = M + col * colW + colW / 2, cy = y + row * colH;
+        ctx.textAlign = "center"; ctx.fillStyle = MUTED; ctx.font = '500 11px "Cinzel", serif'; ctx.letterSpacing = "0.22em";
+        ctx.fillText(entry.label.toUpperCase(), cx, cy); ctx.letterSpacing = "0px";
+        ctx.fillStyle = ICE; ctx.font = '500 18px "Figtree", sans-serif';
+        wrapText(ctx, entry.text, colW - 28).slice(0, 2).forEach((line, k) => ctx.fillText(line, cx, cy + 26 + k * 22));
+      });
+      return await new Promise((resolve, reject) => canvas.toBlob((b) => b ? resolve(b) : reject(new Error("jpg")), "image/jpeg", 0.92));
+    }
+
+    function loadJSON(key, fallback) {
+      try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch { return fallback; }
+    }
+    function saveJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }
+
+    let state = { ...defaultState(), ...loadJSON(STATE_KEY, {}) };
+    FIELD_IDS.forEach((id) => { if (!state[id]) state[id] = { enabled: true, locked: false }; });
+    let bodyType = loadJSON(BODY_KEY, "humanoid");
+    if (!BODY_TYPES.includes(bodyType)) bodyType = "humanoid";
+    if (typeof bodyType !== "string") bodyType = localStorage.getItem(BODY_KEY) || "humanoid";
+    let history = loadJSON(HISTORY_KEY, []);
+    if (!Array.isArray(history)) history = [];
+    let character = history[0] || null;
+
+    const $ = (id) => document.getElementById(id);
+    const toastEl = $("toast");
+    let toastTimer;
+    function toast(msg) {
+      toastEl.textContent = msg; toastEl.classList.add("show");
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
+    }
+    function ornaments(el) {
+      el.insertAdjacentHTML("afterbegin", `
+        <svg class="corner c-tl"><use href="#flourish"/></svg>
+        <svg class="corner c-tr"><use href="#flourish"/></svg>
+        <svg class="corner c-bl"><use href="#flourish"/></svg>
+        <svg class="corner c-br"><use href="#flourish"/></svg>
+        <svg class="jewel j-t"><use href="#jewel"/></svg>
+        <svg class="jewel j-b"><use href="#jewel"/></svg>
+        <svg class="jewel j-l"><use href="#jewel"/></svg>
+        <svg class="jewel j-r"><use href="#jewel"/></svg>
+      `);
+    }
+    ["controls","dossier","history"].forEach((id) => ornaments($(id)));
+
+    function persist() {
+      saveJSON(STATE_KEY, state);
+      saveJSON(HISTORY_KEY, history.slice(0, MAX_HISTORY));
+      try { localStorage.setItem(BODY_KEY, bodyType); } catch {}
+    }
+    function activeCount() { return FIELD_IDS.filter((id) => state[id].enabled).length; }
+    function plural(n, a, b, c) {
+      const m10 = n % 10, m100 = n % 100;
+      if (m10 === 1 && m100 !== 11) return a;
+      if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return b;
+      return c;
+    }
+
+    function renderControls() {
+      const root = $("controls");
+      const morphBtns = BODY_TYPES.map((id) => `
+        <button type="button" class="${bodyType === id ? "active" : "window"}" data-body="${id}" role="radio" aria-checked="${bodyType === id}">
+          <span>${D.BODY_TYPE_LABELS[id]}</span><small>${shortHint[id]}</small>
+        </button>`).join("");
+      const groups = D.FIELD_GROUPS.map((g) => `
+        <section class="stack">
+          <h2 class="group-title">${g.title}</h2>
+          <div class="opt-grid">${g.fields.map((id) => {
+            const on = state[id].enabled;
+            return `<label class="opt window ${on ? "on" : "off"}">
+              <span>${D.FIELD_LABELS[id]}</span>
+              <span class="check">${on ? "✓" : ""}</span>
+              <input type="checkbox" data-field="${id}" ${on ? "checked" : ""} />
+            </label>`;
+          }).join("")}</div>
+        </section>`).join("");
+      const n = activeCount();
+      root.querySelectorAll(".dyn")?.forEach?.(() => {});
+      let dyn = root.querySelector(".dyn");
+      if (!dyn) { dyn = document.createElement("div"); dyn.className = "dyn stack"; root.appendChild(dyn); }
+      dyn.innerHTML = `
+        <fieldset>
+          <legend>Морфология</legend>
+          <div class="morph" role="radiogroup" aria-label="Морфология">${morphBtns}</div>
+          <p class="hint">${D.BODY_TYPE_HINTS[bodyType]}</p>
+        </fieldset>
+        <button type="button" class="btn window on" id="selectAll">Выбрать все пункты</button>
+        <button type="button" class="btn window off" id="resetAll">Сбросить все пункты</button>
+        ${groups}
+        <button type="button" class="btn btn-primary" id="generate" ${n ? "" : "disabled"}>Сгенерировать</button>
+        <p class="count">${n ? `${n} ${plural(n, "пункт", "пункта", "пунктов")} в карточке` : "Нет активных пунктов"}</p>
+      `;
+    }
+
+    function fieldBody(id, c) {
+      if (id === "name") return `<p class="name">${characterTitle(c)}</p>`;
+      if (id === "occupation" && c.occupationRole && c.occupationTag) {
+        return `<div class="chips"><span class="chip window on">${cap(c.occupationRole)}</span><span>+</span><span class="chip window on">${cap(c.occupationTag)}</span></div>`;
+      }
+      const val = c[id];
+      if (val == null) return "";
+      if (Array.isArray(val)) return `<div class="chips">${val.map((v) => `<span class="chip window on">${cap(v)}</span>`).join("")}</div>`;
+      return `<p class="chip window on">${cap(val)}</p>`;
+    }
+    function renderDossier() {
+      const root = $("dossier");
+      let dyn = root.querySelector(".dyn");
+      if (!dyn) { dyn = document.createElement("div"); dyn.className = "dyn"; root.appendChild(dyn); }
+      if (!character) {
+        dyn.innerHTML = `<div class="empty"><h2>Пустая карточка</h2><p class="hint">Выберите морфологию и пункты, затем нажмите «Сгенерировать».</p></div>`;
+        return;
+      }
+      const visible = FIELD_IDS.filter((id) => {
+        if (!state[id].enabled) return false;
+        if (id === "occupation") return Boolean(character.occupationRole && character.occupationTag);
+        return character[id] !== undefined;
+      });
+      dyn.innerHTML = `
+        <div class="dossier-head">
+          <p class="code">${dossierCode(character.id)}</p>
+          <p class="body-tag">${D.BODY_TYPE_LABELS[character.bodyType]}</p>
+          <div class="actions">
+            <button class="btn btn-ghost" id="copyBtn" aria-label="Скопировать">⧉</button>
+            <button class="btn btn-ghost" id="dlBtn" aria-label="Скачать JPG">↓</button>
+          </div>
+        </div>
+        ${visible.map((id) => `
+          <div class="field">
+            <div class="label">${D.FIELD_LABELS[id]}</div>
+            ${fieldBody(id, character)}
+            <div class="actions">
+              <button class="btn btn-ghost" data-reroll="${id}" aria-label="Перебросить">⟳</button>
+              <button class="btn btn-ghost" data-lock="${id}" aria-label="Зафиксировать">${state[id].locked ? "🔒" : "🔓"}</button>
+            </div>
+          </div>
+        `).join("")}
+        <button type="button" class="btn window on" id="dlBtn2" style="width:100%;margin-top:0.5rem">Скачать JPG</button>
+      `;
+    }
+    function histButton(item, active) {
+      const meta = [D.BODY_TYPE_LABELS[item.bodyType], occupationLine(item)].filter(Boolean).join(" · ");
+      return `<button type="button" class="hist-item window ${active ? "on" : ""}" data-hist="${item.id}">
+        <span>${ruName(characterTitle(item))}</span><small>${meta}</small>
+      </button>`;
+    }
+    function renderHistory() {
+      const root = $("history");
+      if (!history.length) { root.hidden = true; return; }
+      root.hidden = false;
+      let dyn = root.querySelector(".dyn");
+      if (!dyn) { dyn = document.createElement("div"); dyn.className = "dyn stack"; root.appendChild(dyn); }
+      const preview = history.slice(0, 6);
+      dyn.innerHTML = `
+        <div class="dossier-head"><h2 class="group-title" style="text-align:left">История</h2><p class="code">${history.length} / ${MAX_HISTORY}</p></div>
+        ${preview.map((item) => histButton(item, item.id === character?.id)).join("")}
+        <button type="button" class="btn window off" id="openHistory">Все ${history.length} ${plural(history.length, "запись", "записи", "записей")}</button>
+      `;
+      $("historyMeta").textContent = `${history.length} из ${MAX_HISTORY} последних генераций`;
+      $("historyAll").innerHTML = history.map((item, i) => histButton(item, item.id === character?.id).replace("</small>", ` · ${i + 1}</small>`)).join("");
+    }
+    function render() { renderControls(); renderDossier(); renderHistory(); persist(); }
+
+    document.addEventListener("click", async (e) => {
+      const t = e.target.closest("[data-body],[data-field],#selectAll,#resetAll,#generate,#copyBtn,#dlBtn,#dlBtn2,[data-reroll],[data-lock],[data-hist],#openHistory,#closeHistory");
+      if (!t) return;
+      if (t.dataset.body) { bodyType = t.dataset.body; render(); return; }
+      if (t.id === "selectAll") { FIELD_IDS.forEach((id) => { state[id].enabled = true; }); render(); return; }
+      if (t.id === "resetAll") { FIELD_IDS.forEach((id) => { state[id] = { enabled: false, locked: false }; }); render(); return; }
+      if (t.id === "generate") {
+        const n = activeCount();
+        if (!n) return toast("Включите хотя бы один пункт");
+        const active = FIELD_IDS.filter((id) => state[id].enabled);
+        if (active.every((id) => state[id].locked)) return toast("Все пункты зафиксированы — отпустите хотя бы один");
+        character = generateCharacter(state, bodyType, character || undefined);
+        history = [character, ...history.filter((x) => x.id !== character.id)].slice(0, MAX_HISTORY);
+        render(); return;
+      }
+      if (t.id === "copyBtn" && character) {
+        try { await navigator.clipboard.writeText(formatText(character)); toast("Карточка скопирована"); }
+        catch { toast("Не удалось скопировать"); }
+        return;
+      }
+      if ((t.id === "dlBtn" || t.id === "dlBtn2") && character) {
+        try {
+          const blob = await renderCard(character);
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${ruName(characterTitle(character)).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").slice(0, 48) || "persona"}.jpg`;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1500);
+          toast("JPG сохранён");
+        } catch { toast("Не удалось сохранить карточку"); }
+        return;
+      }
+      if (t.dataset.reroll && character) {
+        const id = t.dataset.reroll;
+        if (!state[id].enabled) return;
+        const ctx = { body: character.bodyType, country: character.country, gender: character.gender, species: character.species, setting: character.setting };
+        const value = generateField(id, ctx);
+        if (id === "occupation") character = { ...character, occupationRole: value.role, occupationTag: value.tag };
+        else character = { ...character, [id]: value };
+        history = [character, ...history.filter((x) => x.id !== character.id)].slice(0, MAX_HISTORY);
+        render(); return;
+      }
+      if (t.dataset.lock) {
+        const id = t.dataset.lock;
+        if (!state[id].enabled) return;
+        state[id] = { ...state[id], locked: !state[id].locked };
+        render(); return;
+      }
+      if (t.dataset.hist) {
+        character = history.find((x) => x.id === t.dataset.hist) || character;
+        $("historyDialog").close();
+        render(); return;
+      }
+      if (t.id === "openHistory") { $("historyDialog").showModal(); return; }
+      if (t.id === "closeHistory") { $("historyDialog").close(); return; }
+    });
+    document.addEventListener("change", (e) => {
+      const input = e.target.closest("input[data-field]");
+      if (!input) return;
+      const id = input.dataset.field;
+      state[id] = { enabled: input.checked, locked: input.checked ? state[id].locked : false };
+      render();
+    });
+    $("closeHistory").addEventListener("click", () => $("historyDialog").close());
+    render();
+  })();
+  </script>
+</body>
+</html>
