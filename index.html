@@ -391,6 +391,7 @@
     }
     function pickGender(body, age) {
       const all = D.gendersByBody[body];
+      if (body === "monster") return pick(all);
       const binary = all.slice(0, 2);
       const others = all.slice(2);
       if (isYouthAge(age) || !others.length) return pick(binary);
