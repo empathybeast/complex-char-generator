@@ -856,10 +856,14 @@
       if (t.dataset.reroll && character) {
         const id = t.dataset.reroll;
         if (!state[id].enabled || state[id].locked) return;
-        const ctx = { body: character.bodyType, country: character.country, gender: character.gender, species: character.species, setting: character.setting };
+        const ctx = { body: character.bodyType, country: character.country, gender: character.gender, species: character.species, setting: character.setting, ageGroup: character.ageGroup };
         const value = generateField(id, ctx);
         if (id === "occupation") character = { ...character, occupationRole: value.role, occupationTag: value.tag };
         else character = { ...character, [id]: value };
+        if (id === "ageGroup") {
+          if (state.gender.enabled && !state.gender.locked) character.gender = pickGender(character.bodyType, value);
+          if (state.orientation.enabled && !state.orientation.locked) character.orientation = pickOrientation(character.bodyType, value);
+        }
         history = [character, ...history.filter((x) => x.id !== character.id)].slice(0, MAX_HISTORY);
         render(); return;
       }
