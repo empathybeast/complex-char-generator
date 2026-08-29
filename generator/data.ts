@@ -625,7 +625,6 @@ export const speciesByBody: Record<BodyType, readonly string[]> = {
 export const marksByBody: Record<BodyType, readonly string[]> = {
   humanoid: [
     "Шрам на левой брови",
-    "Татуировка в виде змеи",
     "Гетерохромия",
     "Веснушки по всему лицу",
     "Серебряная прядь волос",
