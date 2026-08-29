@@ -178,8 +178,7 @@
     .faq dl { margin-top: 0.7rem; display: flex; flex-direction: column; gap: 0.6rem; }
     .faq dt { font-size: 0.9rem; color: var(--fg); }
     .faq dd { font-size: 12px; color: var(--ice-2); margin-top: 2px; line-height: 1.45; }
-    .morph-hero { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; margin: 0.85rem 0 0.35rem; }
-    .morph-hero .body-tag { font-size: 2rem; padding: 0.35rem 1.4rem; }
+    .body-tag { font-family: var(--font-display); font-size: 1.15rem; color: var(--ice-2); }
     .hist-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; background: transparent; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0; }
     .count { text-align: center; font-size: 12px; color: var(--subtle); }
     .dossier-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
@@ -319,6 +318,15 @@
       return a;
     };
     const pickUnique = (arr, n) => shuffle(arr).slice(0, Math.max(0, Math.min(n, arr.length)));
+    const pickCount = (table) => {
+      const total = table.reduce((sum, row) => sum + row.weight, 0);
+      let roll = Math.random() * total;
+      for (const row of table) {
+        roll -= row.weight;
+        if (roll <= 0) return row.n;
+      }
+      return table[table.length - 1].n;
+    };
     const cap = (t) => {
       const s = String(t || "").trim();
       return s ? s.charAt(0).toLocaleUpperCase("ru-RU") + s.slice(1) : s;
@@ -368,8 +376,8 @@
         case "setting": return pick(D.settingsByBody[ctx.body]);
         case "occupation": return { role: pick(D.occupationRolesByBody[ctx.body]), tag: pick(D.occupationTagsByBody[ctx.body]) };
         case "archetype": return pick(D.archetypesByBody[ctx.body]);
-        case "marks": return pickUnique(D.marksByBody[ctx.body], 1 + Math.floor(Math.random() * 3));
-        case "traits": return pickUnique(D.traits, 2);
+        case "marks": return pickUnique(D.marksByBody[ctx.body], pickCount([{ n: 3, weight: 15 }, { n: 2, weight: 30 }, { n: 1, weight: 50 }, { n: 0, weight: 5 }]));
+        case "traits": return pickUnique(D.traits, pickCount([{ n: 2, weight: 40 }, { n: 1, weight: 60 }]));
         case "plotTwist": return pick(D.plotTwists);
       }
     }
@@ -485,12 +493,11 @@
       let y = 96;
       ctx.fillStyle = MUTED; ctx.font = '500 12px "Cinzel", serif'; ctx.letterSpacing = "0.28em"; ctx.textAlign = "left";
       ctx.fillText(dossierCode(c.id), M, y);
-      ctx.textAlign = "right"; ctx.fillText("ПЕРСОНА", W - M, y);
-      ctx.textAlign = "center"; ctx.letterSpacing = "0.22em";
-      ctx.font = '500 13px "Cinzel", serif'; ctx.fillText("МОРФОЛОГИЯ", W / 2, y + 38);
-      ctx.letterSpacing = "0px"; ctx.fillStyle = ICE2; ctx.font = '600 42px "EB Garamond", Georgia, serif';
-      ctx.fillText(D.BODY_TYPE_LABELS[c.bodyType], W / 2, y + 88);
-      y += 130;
+      ctx.textAlign = "center"; ctx.fillStyle = ICE2; ctx.letterSpacing = "0.16em";
+      ctx.font = '500 16px "Cinzel", serif'; ctx.fillText(D.BODY_TYPE_LABELS[c.bodyType].toUpperCase(), W / 2, y);
+      ctx.textAlign = "right"; ctx.fillStyle = MUTED; ctx.letterSpacing = "0.28em";
+      ctx.font = '500 12px "Cinzel", serif'; ctx.fillText("ПЕРСОНА", W - M, y);
+      ctx.letterSpacing = "0px"; y += 70;
       ctx.fillStyle = ICE; ctx.font = '600 48px "EB Garamond", Georgia, serif'; ctx.textAlign = "center";
       for (const line of wrapText(ctx, characterTitle(c), W - M * 2).slice(0, 2)) { ctx.fillText(line, W / 2, y); y += 54; }
       const sub = [c.species, c.ageGroup, c.archetype].filter(Boolean).join("  ·  ");
@@ -634,19 +641,18 @@
       const visible = FIELD_IDS.filter((id) => {
         if (!state[id].enabled) return false;
         if (id === "occupation") return Boolean(character.occupationRole && character.occupationTag);
-        return character[id] !== undefined;
+        const value = character[id];
+        if (Array.isArray(value) && value.length === 0) return false;
+        return value !== undefined;
       });
       dyn.innerHTML = `
         <div class="dossier-head">
           <p class="code">${dossierCode(character.id)}</p>
+          <p class="body-tag">${D.BODY_TYPE_LABELS[character.bodyType]}</p>
           <div class="actions">
             <button class="btn btn-ghost" id="copyBtn" aria-label="Скопировать">⧉</button>
             <button class="btn btn-ghost" id="dlBtn" aria-label="Скачать карточку JPG">↓</button>
           </div>
-        </div>
-        <div class="morph-hero">
-          <p class="label">Морфология</p>
-          <p class="body-tag window on">${D.BODY_TYPE_LABELS[character.bodyType]}</p>
         </div>
         ${visible.map((id) => `
           <div class="field">
