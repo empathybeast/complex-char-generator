@@ -30,7 +30,7 @@ export const FIELD_LABELS: Record<
 export const FIELD_GROUPS: FieldGroup[] = [
   {
     id: "identity",
-    title: "Личность",
+    title: "Описание",
     fields: ["country", "gender", "orientation", "species", "ageGroup"],
   },
   {
@@ -41,12 +41,12 @@ export const FIELD_GROUPS: FieldGroup[] = [
   {
     id: "world",
     title: "Мир",
-    fields: ["setting", "archetype"],
+    fields: ["setting"],
   },
   {
     id: "details",
     title: "Детали",
-    fields: ["marks", "traits", "plotTwist"],
+    fields: ["archetype", "marks", "traits", "plotTwist"],
   },
 ];
 
