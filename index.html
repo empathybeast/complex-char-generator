@@ -400,7 +400,14 @@
     }
     function pickOrientation(body, age) {
       if (isChildAge(age)) return "Нет";
-      return pick(orientationPool(body));
+      const pool = orientationPool(body);
+      const common = pool.filter((item) => {
+        const a = String(item).toLowerCase();
+        return a.includes("гетеро") || a.includes("гомо") || a.includes("бисексуал");
+      });
+      const others = pool.filter((item) => !common.includes(item));
+      if (common.length && Math.random() < 0.7) return pick(common);
+      return pick(others.length ? others : pool);
     }
     function generateField(field, ctx) {
       switch (field) {
