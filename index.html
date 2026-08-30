@@ -312,8 +312,8 @@
     const D = JSON.parse(document.getElementById("persona-data").textContent);
     const BODY_TYPES = ["humanoid", "anthro", "feral", "monster"];
     const FIELD_IDS = ["country","gender","orientation","species","ageGroup","occupation","setting","archetype","marks","traits","plotTwist"];
-    const INDEPENDENT = ["country","species","setting","archetype","ageGroup"];
-    const DEPENDENT = ["gender","orientation","occupation","marks","traits","plotTwist"];
+    const INDEPENDENT = ["species","setting","archetype","ageGroup"];
+    const DEPENDENT = ["country","gender","orientation","occupation","marks","traits","plotTwist"];
     const MAX_HISTORY = 50;
     const HISTORY_KEY = "persona.history.v3";
     const STATE_KEY = "persona.fields.v3";
@@ -566,10 +566,24 @@
       });
       return filtered.length ? filtered : pool;
     }
+    const SETTING_COUNTRIES = {
+      "Древний Египет": ["Египет", "Марокко", "Иран", "Италия", "Индия", "Кения"],
+      "Древняя Греция": ["Италия", "Египет", "Марокко", "Иран", "Индия", "Франция"],
+      "Древний Рим": ["Италия", "Франция", "Германия", "Египет", "Марокко", "Иран", "Индия", "Польша"],
+      "Древний Китай": ["Китай", "Корея", "Япония", "Таиланд", "Индия", "Иран", "Россия"],
+      "Япония самураев": ["Япония", "Корея", "Китай"]
+    };
+    function countriesForSetting(setting) {
+      if (!setting) return D.countries;
+      const mapped = SETTING_COUNTRIES[setting];
+      if (!mapped) return D.countries;
+      const available = mapped.filter((item) => D.countries.includes(item));
+      return available.length ? available : D.countries;
+    }
     function generateField(field, ctx) {
       switch (field) {
         case "name": return generateName(ctx.body, ctx.country, ctx.gender);
-        case "country": return pick(D.countries);
+        case "country": return pick(countriesForSetting(ctx.setting));
         case "gender": return pickGender(ctx.body, ctx.ageGroup);
         case "orientation": return pickOrientation(ctx.body, ctx.ageGroup);
         case "species": return pick(D.speciesByBody[ctx.body]);
