@@ -409,6 +409,46 @@
       if (common.length && Math.random() < 0.7) return pick(common);
       return pick(others.length ? others : pool);
     }
+    const OCC_DOMAIN_KEYS = {
+      healer: ["лекар","целит","медик","врач","хирург","аптек","травник","ветеринар","сиделк","акушер","стоматолог","знахар","повитух","киберхирург","медсестр","фельдшер","санитар","психолог"],
+      fighter: ["воин","наёмник","наемник","рыцарь","лучник","солдат","офицер","снайпер","телохранител","палач","тюремщик","гладиатор","полицейск","пожарн","спасател","сапёр","сапер","охранник","оруженосец","пограничник","тренер","паладин","вахтёр","вахтер","страж"],
+      hunt: ["охотник","следопыт","сталкер","загонщик","егер","крысолов","ищейка","дозорный"],
+      criminal: ["вор","контрабанд","пират","бандит","разбойник","грабител","карманник","взломщик","налётчик","налетчик","рейдер","мародёр","мародер","гангстер","киллер","отравител","шантаж","вымогател","похитител","фальшивомонет","работорг","барыга","дезертир","предател","диверсант","казнокрад","взяточник","людоед","убийца"],
+      spy: ["шпион","детектив","следовател","хакер","разведчик","информатор","связной","сыщик","лазутчик","торговец информации"],
+      faith: ["жрец","монах","экзорцист","инквизитор","священник","еретик","культист","друид","шаман","гадалк","оракул","ведьм","паладин","паломник","проповедник","пастырь"],
+      arcane: ["маг","алхимик","некромант","ведьм","призывател","чернокниж","зачаровател","демонолог","жрец крови"],
+      craft: ["кузнец","инженер","механик","конструктор","оружейник","ювелир","портной","цирюльник","плотник","гончар","сапожник","стеклодув","часовщик","скульптор","татуировщик","сантехник","электрик","сварщик","шахтёр","шахтер","строител","архитектор","мельник","парикмахер","парфюмер"],
+      food: ["повар","трактирщик","пекарь","мясник","бармен","официант","дегустатор","пивовар"],
+      land: ["фермер","пастух","рыбак","садовник","конюх","лесник","пчеловод","дрессировщик","старател","кормилец","сборщик"],
+      mind: ["учёный","ученый","архивариус","учитель","студент","ученик","археолог","библиотекар","переводчик","астроном","биолог","химик","геолог","историк","профессор","писарь","картограф","ксенобиолог"],
+      art: ["певец","писатель","художник","актёр","актер","танцор","шут","бард","журналист","музыкант","фотограф","композитор","артист","циркач"],
+      rule: ["дипломат","юрист","судья","правител","советник","дворянин","чиновник","посол","король","принц","глашатай","нотариус","адвокат","казначей","мэр","королева","император","посланник","узурпатор","тиран","вожак","матка"],
+      serve: ["слуга","няня","дворецкий","дворник","прачка","горничная","почтальон","продавец","торговец","секретарь","бухгалтер","компаньон"],
+      sea: ["пилот","курьер","капитан","моряк","водитель","навигатор","радист","водолаз","космонавт","лоцман","машинист","штурман","таможенник","пират"],
+      machine: ["хакер","программист","инженер","механик","радист","киберхирург"],
+      wild: ["следопыт","сталкер","одиночка","странник","отшельник","бродяга","скиталец","проводник"],
+      companion: ["фамильяр","поводырь","напарник","компаньон","ездовой","вьючный","сторож дома","помощник"],
+      predator: ["пожирател","жнец","карател","охотник на людей","людоед","бич","искусител","совратител"],
+      keeper: ["страж","хранитель","сторож","свидетел","собирател","вестник","пастырь","матка"]
+    };
+    function occupationDomains(name) {
+      const n = String(name).toLowerCase();
+      return Object.keys(OCC_DOMAIN_KEYS).filter((domain) => OCC_DOMAIN_KEYS[domain].some((key) => n.includes(key)));
+    }
+    function occupationsCompatible(a, b) {
+      if (a === b) return false;
+      const left = occupationDomains(a), right = occupationDomains(b);
+      return left.length && right.length && left.some((d) => right.includes(d));
+    }
+    function generateOccupation(body) {
+      const roles = D.occupationRolesByBody[body];
+      const tags = D.occupationTagsByBody[body];
+      const role = pick(roles);
+      if (Math.random() < 0.6) return { role };
+      const compatible = tags.filter((tag) => occupationsCompatible(role, tag));
+      if (!compatible.length) return { role };
+      return { role, tag: pick(compatible) };
+    }
     function generateField(field, ctx) {
       switch (field) {
         case "name": return generateName(ctx.body, ctx.country, ctx.gender);
@@ -418,13 +458,7 @@
         case "species": return pick(D.speciesByBody[ctx.body]);
         case "ageGroup": return pick(D.ageGroupsByBody[ctx.body]);
         case "setting": return pick(D.settingsByBody[ctx.body]);
-        case "occupation": {
-          const roles = D.occupationRolesByBody[ctx.body];
-          const tags = D.occupationTagsByBody[ctx.body];
-          const role = pick(roles);
-          const other = tags.filter((tag) => tag !== role);
-          return { role, tag: pick(other.length ? other : tags) };
-        }
+        case "occupation": return generateOccupation(ctx.body);
         case "archetype": return pick(D.archetypesByBody[ctx.body]);
         case "marks": return pickUnique(D.marksByBody[ctx.body], pickCount([{ n: 3, weight: 15 }, { n: 2, weight: 30 }, { n: 1, weight: 50 }, { n: 0, weight: 5 }]));
         case "traits": return pickUnique(D.traits, pickCount([{ n: 2, weight: 40 }, { n: 1, weight: 60 }]));
@@ -441,10 +475,11 @@
       if (field === "archetype") return has(D.archetypesByBody[body]);
       if (field === "orientation") return value === "Нет" || has(orientationPool(body));
       if (field === "occupation") {
-        if (!value || typeof value.role !== "string" || typeof value.tag !== "string") return false;
+        if (!value || typeof value.role !== "string") return false;
         const hasRole = D.occupationRolesByBody[body].some((x) => x.toLowerCase() === value.role.toLowerCase());
-        const hasTag = D.occupationTagsByBody[body].some((x) => x.toLowerCase() === value.tag.toLowerCase());
-        return hasRole && hasTag;
+        if (!hasRole) return false;
+        if (!value.tag) return true;
+        return D.occupationTagsByBody[body].some((x) => x.toLowerCase() === String(value.tag).toLowerCase());
       }
       if (field === "marks") {
         return Array.isArray(value) && value.every((item) =>
@@ -456,7 +491,7 @@
     function keepLocked(field, state, prev, body) {
       if (!state[field].enabled || !state[field].locked || !prev) return undefined;
       if (field === "occupation") {
-        if (!prev.occupationRole || !prev.occupationTag) return undefined;
+        if (!prev.occupationRole) return undefined;
         const occ = { role: prev.occupationRole, tag: prev.occupationTag };
         if (!isValid(field, occ, body)) return undefined;
         return occ;
@@ -483,7 +518,8 @@
       return next;
     }
     function occupationLine(c) {
-      if (!c.occupationRole || !c.occupationTag) return null;
+      if (!c.occupationRole) return null;
+      if (!c.occupationTag) return c.occupationRole;
       return `${c.occupationRole} + ${c.occupationTag}`;
     }
     function characterTitle(c) { return c.species || occupationLine(c) || "Персона"; }
@@ -606,7 +642,9 @@
         if (!v) return; stat(k, v, px, sy, pw); sy += 36;
       });
 
-      const occ = (c.occupationRole && c.occupationTag) ? `${cap(c.occupationRole)} · ${cap(c.occupationTag)}` : "";
+      const occ = c.occupationRole
+        ? (c.occupationTag ? `${cap(c.occupationRole)} · ${cap(c.occupationTag)}` : cap(c.occupationRole))
+        : "";
       const fields = [];
       if (species) fields.push(["Вид", species]);
       if (occ) fields.push(["Занятие", occ]);
@@ -730,8 +768,11 @@
 
     function fieldBody(id, c) {
       if (id === "name") return `<p class="name">${characterTitle(c)}</p>`;
-      if (id === "occupation" && c.occupationRole && c.occupationTag) {
-        return `<div class="chips"><span class="chip window on">${cap(c.occupationRole)}</span><span>+</span><span class="chip window on">${cap(c.occupationTag)}</span></div>`;
+      if (id === "occupation" && c.occupationRole) {
+        if (c.occupationTag) {
+          return `<div class="chips"><span class="chip window on">${cap(c.occupationRole)}</span><span>+</span><span class="chip window on">${cap(c.occupationTag)}</span></div>`;
+        }
+        return `<p class="chip window on">${cap(c.occupationRole)}</p>`;
       }
       const val = c[id];
       if (val == null) return "";
@@ -770,8 +811,8 @@
         return;
       }
       const title = cap(character.species || occupationLine(character) || "Персона");
-      const job = (state.occupation.enabled && character.occupationRole && character.occupationTag)
-        ? `<p class="job">${cap(character.occupationRole)} · ${cap(character.occupationTag)}</p>${fieldActions("occupation")}`
+      const job = (state.occupation.enabled && character.occupationRole)
+        ? `<p class="job">${character.occupationTag ? `${cap(character.occupationRole)} · ${cap(character.occupationTag)}` : cap(character.occupationRole)}</p>${fieldActions("occupation")}`
         : "";
       const flavor = ["setting", "archetype"].map((id) => paneBlock(id)).join("");
       dyn.innerHTML = `
