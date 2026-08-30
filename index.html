@@ -464,6 +464,8 @@
     })();
     function occupationsCompatible(a, b) {
       if (a === b) return false;
+      const la = String(a).toLowerCase(), lb = String(b).toLowerCase();
+      if ((la.includes("людоед") && lb.includes("няня")) || (la.includes("няня") && lb.includes("людоед"))) return true;
       const left = occupationDomains(a), right = occupationDomains(b);
       if (!left.length || !right.length) return false;
       if (left.some((d) => right.includes(d))) return false;
