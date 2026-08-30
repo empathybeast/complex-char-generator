@@ -435,10 +435,39 @@
       const n = String(name).toLowerCase();
       return Object.keys(OCC_DOMAIN_KEYS).filter((domain) => OCC_DOMAIN_KEYS[domain].some((key) => n.includes(key)));
     }
+    const DOMAIN_LINKS = (() => {
+      const pairs = [
+        ["healer","fighter"],["healer","criminal"],["healer","spy"],["healer","faith"],["healer","arcane"],["healer","land"],["healer","mind"],["healer","wild"],["healer","hunt"],["healer","companion"],
+        ["fighter","criminal"],["fighter","spy"],["fighter","faith"],["fighter","hunt"],["fighter","wild"],["fighter","rule"],["fighter","sea"],["fighter","keeper"],
+        ["hunt","land"],["hunt","wild"],["hunt","companion"],["hunt","criminal"],
+        ["criminal","spy"],["criminal","sea"],["criminal","wild"],["criminal","arcane"],["criminal","faith"],["criminal","serve"],["criminal","art"],["criminal","food"],
+        ["spy","mind"],["spy","sea"],["spy","rule"],["spy","machine"],
+        ["faith","arcane"],["faith","mind"],["faith","wild"],["faith","land"],["faith","rule"],
+        ["arcane","mind"],["arcane","wild"],
+        ["craft","land"],["craft","food"],["craft","machine"],["craft","mind"],["craft","art"],["craft","serve"],
+        ["food","land"],["food","serve"],["food","art"],
+        ["land","wild"],["land","companion"],
+        ["mind","machine"],["mind","art"],["mind","rule"],
+        ["art","serve"],["art","faith"],["art","companion"],["art","rule"],
+        ["rule","faith"],["rule","spy"],["rule","sea"],
+        ["serve","companion"],["serve","land"],
+        ["sea","machine"],["sea","hunt"],
+        ["predator","hunt"],["predator","criminal"],["predator","arcane"],["predator","keeper"],["predator","wild"],
+        ["keeper","faith"],["keeper","wild"],["keeper","hunt"]
+      ];
+      const links = {};
+      for (const [a, b] of pairs) {
+        (links[a] ??= []).push(b);
+        (links[b] ??= []).push(a);
+      }
+      return links;
+    })();
     function occupationsCompatible(a, b) {
       if (a === b) return false;
       const left = occupationDomains(a), right = occupationDomains(b);
-      return left.length && right.length && left.some((d) => right.includes(d));
+      if (!left.length || !right.length) return false;
+      if (left.some((d) => right.includes(d))) return false;
+      return left.some((d) => right.some((e) => (DOMAIN_LINKS[d] || []).includes(e)));
     }
     function generateOccupation(body) {
       const roles = D.occupationRolesByBody[body];
